@@ -1,0 +1,245 @@
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+/* Mỗi ô nhập */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+/* Dấu * đỏ */
+.required {
+  color: red;
+  font-weight: bold;
+}
+
+/* Ghi chú */
+.note {
+  font-size: 12px;
+  color: #666;
+  text-align: left;
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* Nút đăng ký */
+.btn-submit {
+  width: 100%;
+  background-color: #900;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.btn-submit:hover {
+  background-color: #700;
+}
+.section-title {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #900;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 20px;
+  padding-top: 20px;
+  width: 100%;
+  text-align: center;
+}
+
+.section-title::after {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 2px;
+  background-color: #900;
+  margin-top: 8px;
+}
+/*table đk môn*/
+.score-table {
+  width: 70%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  margin: 20px auto;
+  border: none;
+}
+
+.score-table thead {
+  background-color: #a01616;
+  color: white;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 8px;
+}
+
+.score-table th {
+  padding: 10px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.score-table tbody tr td:first-child {
+  background-color: #a01616;
+  color: white;
+  font-weight: bold;
+  text-align: center;
+  padding: 8px;
+  border-radius: 12px;
+  width: 280px;
+  font-size: 14px;
+}
+
+.score-table tbody tr td:last-child {
+  padding: 8px;
+  border-radius: 0 12px 12px 0;
+}
+
+.score-table input {
+  width: 80%;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  font-size: 14px;
+  background-color: white;
+  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.upload-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.upload-btn {
+  background-color: #a01616; /* Màu đỏ */
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.upload-btn .cloud-icon {
+  font-size: 16px;
+}
+
+.upload-btn:hover {
+  background-color: #800f0f;
+}
+
+#file-name {
+  font-size: 14px;
+  color: #555;
+}
+
+/* Căn checkbox và văn bản ngang hàng */
+.form-group label {
+  display: flex;
+  align-items: center; /* Căn giữa theo chiều dọc */
+  gap: 10px; /* Khoảng cách giữa checkbox và văn bản */
+  font-size: 16px; /* Tăng kích thước chữ nếu cần */
+}
+
+/* Tăng kích thước checkbox */
+.form-group input[type="checkbox"] {
+  width: 20px; /* Chiều rộng */
+  height: 20px; /* Chiều cao */
+  cursor: pointer;
+}
+
+.btn-submit-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-top: 20px;
+  width: 100%;
+}
+
+.btn-submit-container::before,
+.btn-submit-container::after {
+  content: "";
+  flex-grow: 1;
+  height: 1px;
+  background: repeating-linear-gradient(
+    to right,
+    black,
+    black 5px,
+    transparent 5px,
+    transparent 10px
+  );
+}
+
+.btn-submit {
+  background-color: #900;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
+  width: 20%;
+  border-radius: 0; /* Giữ góc vuông */
+  margin: 0 15px;
+}
+
+.btn-submit:hover {
+  background-color: #700;
+}
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .container {
+    width: 80%;
+    padding: 20px;
+  }
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .btn-submit {
+    width: 30%;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    width: 90%;
+  }
+  .form-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+  .btn-submit {
+    width: 50%;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    width: 95%;
+    padding: 15px;
+  }
+  h1 {
+    font-size: 18px;
+  }
+  .btn-submit {
+    width: 80%;
+  }
+}

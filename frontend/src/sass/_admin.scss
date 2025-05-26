@@ -1,0 +1,183 @@
+/* Tổng thể */
+.admin-container {
+  display: flex;
+  height: 100vh;
+  background-color: #f8f9fa;
+}
+
+/* Header */
+.admin-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background-color: white;
+  color: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+.admin-header h1 {
+  color: black;
+}
+/* Sidebar */
+.admin-sidebar {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  width: 250px;
+  height: calc(100vh - 60px);
+  background-color: white;
+  border-right: 1px solid #ddd;
+  padding-top: 10px;
+  overflow-y: auto;
+}
+
+/* Danh sách menu */
+.admin-sidebar ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+/* Mục menu */
+.admin-sidebar li {
+  padding: 12px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+/* Màu nền khi hover */
+.admin-sidebar li:hover {
+  background: #e3e3e3;
+}
+
+/* Menu chính */
+.menu-item {
+  background: #fff;
+  color: black;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+}
+
+/* Mũi tên dropdown */
+.menu-item::after {
+  content: "▼"; /* Mặc định mũi tên chỉ xuống */
+  font-size: 14px;
+  margin-left: auto;
+  transition: transform 0.3s;
+}
+
+/* Khi menu mở, mũi tên quay lên */
+.menu-item.active::after {
+  transform: rotate(180deg);
+}
+
+/* Submenu */
+.submenu {
+  padding-left: 0;
+  display: none;
+  background: white;
+  border-left: 4px solid #fff;
+  font-size: 13px;
+}
+
+/* Hiển thị submenu khi menu chính được mở */
+.menu-item.active + .submenu {
+  display: block;
+}
+
+/* Các mục trong submenu */
+.submenu-content {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4 cột */
+  gap: 5px; /* Giảm khoảng cách giữa các ô */
+  list-style: none;
+  padding: 10px; /* Giảm padding cho gọn */
+  width: 100%; /* Kéo dài hết chiều ngang */
+  font-size: 13px;
+}
+
+.submenu-content li {
+  background-color: white;
+  border: 1px solid black; /* Viền mỏng hơn */
+  border-radius: 5px; /* Bo góc nhẹ */
+  padding: 15px 10px; /* Giảm padding */
+  text-align: center;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px; /* Đảm bảo chiều cao đồng đều */
+}
+
+.submenu-content li:hover {
+  background-color: #f0f0f0;
+  transform: scale(1.03);
+}
+
+.submenu-content li .icon {
+  font-size: 35px; /* Kích thước icon nhỏ hơn */
+  margin-bottom: 5px;
+}
+
+/* Nội dung chính */
+.admin-main {
+  margin-left: 250px;
+  padding: 20px;
+  width: calc(100% - 250px);
+}
+
+/* Nội dung hiển thị khi click */
+.admin-content {
+  padding: 50px;
+  background: #f8f9fa;
+  min-height: calc(100vh - 60px); /* Đảm bảo nội dung không bị cắt */
+  margin-right: 250px; /* Đẩy nội dung sang phải để không đè lên sidebar */
+  width: calc(100% - 250px);
+}
+
+/* Tiêu đề của admin content */
+.admin-content h2 {
+  font-size: 18px;
+  color: #900;
+  margin-bottom: 20px;
+}
+
+/* Các mục quản lý thông tin */
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.admin-grid button {
+  background: white;
+  border: 1px solid #ddd;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.admin-grid button:hover {
+  background: #f1f1f1;
+}

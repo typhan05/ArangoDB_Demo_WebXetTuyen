@@ -1,0 +1,6 @@
+@charset 'utf-8';
+
+// Only @use allowed after @charset
+@use "_global" as *;
+@use "_admin" as *;
+@use "_register" as *;

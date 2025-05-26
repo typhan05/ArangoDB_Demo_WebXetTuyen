@@ -1,0 +1,242 @@
+from datetime import datetime
+from fastapi import FastAPI, Query
+from arango import ArangoClient
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+# Khởi tạo FastAPI
+app = FastAPI()
+
+origins = [
+    "http://localhost.tiangolo.com",
+    "https://localhost.tiangolo.com",
+    "http://localhost",
+    "http://localhost:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["Content-Disposition"],
+)
+
+# Kết nối đến ArangoDB
+client = ArangoClient(hosts="http://localhost:8529")
+
+# Xác thực và chọn database
+db = client.db("XetTuyenDaiHoc", username="root", password="root")
+
+class FormXetTuyenRequest(BaseModel):
+    fullName: str
+    dob: str
+    cccd: str
+    email: str
+    phone: str
+    address: str
+    gender: str
+    truong: str
+    khoi: str
+    diem: str
+    namTotNghiep: str
+    duHoc: bool
+    maDotXetTuyen: str
+    maHinhThucXetTuyen: str
+    nganhHoc: str
+
+@app.get("/")
+def read_root():
+    return {"message": "API FastAPI kết nối ArangoDB"}
+
+@app.get("/form-xet-tuyen")
+def get_form_xet_tuyen():
+    try:
+        cursor = db.collection("FormXetTuyen").all()
+        result = [doc for doc in cursor]
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    
+@app.get("/tinh-tp")
+def get_form_xet_tuyen():
+    try:
+        cursor = db.collection("Tinh").all()
+        result = [doc for doc in cursor]
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    
+@app.get("/truong-thpt")
+def get_truong_thpt(ma_tinh: str = Query(..., description="Mã tỉnh")):
+    try:
+        # Query collection TruongTHPT với điều kiện MaTinh = ma_tinh
+        cursor = db.collection("TruongTHPT").find({"MaTinh": ma_tinh})
+        
+        result = [doc for doc in cursor]
+        
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    
+@app.get("/nganh-hoc")
+def get_nganh_hoc():
+    try:
+        cursor = db.collection("NganhHoc").all()
+        result = [doc for doc in cursor]
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    
+@app.get("/khoi-xet-tuyen")
+def get_khoi_xet_tuyen_by_ma_nganh(ma_nganh: int = Query(..., description="Mã ngành học, ví dụ: 7140201")):
+    try:
+        aql = """
+        LET nganh = FIRST(
+            FOR n IN NganhHoc
+                FILTER n.MaNganhHoc == @ma_nganh
+                RETURN n
+        )
+
+        FOR edge IN KhoiXetTuyen_NganhHoc
+            FILTER edge._from == nganh._id
+            FOR khoi IN KhoiXetTuyen
+                FILTER khoi._id == edge._to
+                RETURN khoi
+        """
+
+        bind_vars = {
+            "ma_nganh": ma_nganh
+        }
+
+        cursor = db.aql.execute(aql, bind_vars=bind_vars)
+        result = [doc for doc in cursor]
+
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.get("/mon-hoc-theo-khoi")
+def get_mon_hoc_by_ma_khoi(ma_khoi: str = Query(..., description="Mã khối xét tuyển, ví dụ: A00")):
+    try:
+        aql = """
+        LET khoi = FIRST(
+            FOR k IN KhoiXetTuyen
+                FILTER k.MaKhoi == @ma_khoi
+                RETURN k
+        )
+
+        FOR edge IN KhoiXetTuyen_MonHoc
+            FILTER edge._from == khoi._id
+            FOR mon IN MonHoc
+                FILTER mon._id == edge._to
+                RETURN mon
+        """
+
+        bind_vars = {
+            "ma_khoi": ma_khoi
+        }
+
+        cursor = db.aql.execute(aql, bind_vars=bind_vars)
+        result = [doc for doc in cursor]
+        
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    
+def generate_ma_form(dob_str: str, db) -> str:
+    # Đảm bảo chuỗi ISO được chuẩn hóa và không chứa "Z"
+    dob_str_clean = dob_str.split("T")[0]
+    dob_date = datetime.fromisoformat(dob_str_clean)
+
+    dob_part = dob_date.strftime("%Y%m%d")
+
+    # Truy vấn AQL để đếm số form đã đăng ký với ngày sinh đó
+    count_aql = """
+    RETURN LENGTH(
+        FOR f IN FormXetTuyen
+            FILTER f.NgaySinh == @NgaySinh
+            RETURN 1
+    )
+    """
+    bind_vars = {"NgaySinh": dob_date.strftime("%Y-%m-%d")}
+
+    count_cursor = db.aql.execute(count_aql, bind_vars=bind_vars, count=True)
+    current_count = list(count_cursor)[0] if count_cursor else 0
+    next_number = current_count + 1
+
+    return f"{dob_part}{next_number:02}"  # Luôn giữ 2 chữ số đếm phía sau
+    
+@app.post("/create-form-xet-tuyen")
+def create_form(payload: FormXetTuyenRequest):
+    try:
+        ma_form = generate_ma_form(payload.dob, db)
+
+        dob = datetime.fromisoformat(payload.dob[:10]).strftime("%Y-%m-%d")
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        aql = """
+        LET newForm = {
+          MaForm: @MaForm,
+          HoTen: @HoTen,
+          GioiTinh: @GioiTinh,
+          NgaySinh: @NgaySinh,
+          CCCD: @CCCD,
+          Email: @Email,
+          SoDienThoai: @SoDienThoai,
+          DiaChi: @DiaChi,
+          NamTotNghiep: @NamTotNghiep,
+          CoNguyenVongDuHoc: @CoNguyenVongDuHoc,
+          NgayDangKy: @NgayDangKy,
+          MaTruong: @MaTruong,
+          DiemThi: @DiemThi
+        }
+
+        INSERT newForm INTO FormXetTuyen
+        LET inserted = NEW
+
+        LET dot = FIRST(FOR d IN DotXetTuyen FILTER d.MaDotXetTuyen == @MaDotXetTuyen RETURN d)
+        INSERT { _from: inserted._id, _to: dot._id } INTO FormXetTuyen_DotXetTuyen
+
+        LET hinhthuc = FIRST(FOR h IN HinhThucXetTuyen FILTER h.MaHinhThucXetTuyen == @MaHinhThucXetTuyen RETURN h)
+        INSERT { _from: inserted._id, _to: hinhthuc._id } INTO FormXetTuyen_HinhThucXetTuyen
+
+        INSERT { _from: inserted._id, _to: @NganhHocId } INTO FormXetTuyen_NganhHoc
+        INSERT { _from: inserted._id, _to: @KhoiId } INTO FormXetTuyen_KhoiXetTuyen
+
+        RETURN inserted
+        """
+
+        bind_vars = {
+            "MaForm": ma_form,
+            "HoTen": payload.fullName,
+            "GioiTinh": "1" if payload.gender.lower() == "male" else "0",
+            "NgaySinh": dob,
+            "CCCD": payload.cccd,
+            "Email": payload.email,
+            "SoDienThoai": payload.phone,
+            "DiaChi": payload.address,
+            "NamTotNghiep": payload.namTotNghiep,
+            "CoNguyenVongDuHoc": "1" if payload.duHoc else "0",
+            "NgayDangKy": now,
+            "MaTruong": payload.truong,
+            "DiemThi": payload.diem,
+            "MaDotXetTuyen": payload.maDotXetTuyen,
+            "MaHinhThucXetTuyen": payload.maHinhThucXetTuyen,
+            "NganhHocId": f"NganhHoc/{payload.nganhHoc}",
+            "KhoiId": f"KhoiXetTuyen/{payload.khoi}"
+        }
+
+        cursor = db.aql.execute(aql, bind_vars=bind_vars)
+        inserted = list(cursor)[0]
+        return JSONResponse(content=inserted)
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+# Chạy server FastAPI
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
