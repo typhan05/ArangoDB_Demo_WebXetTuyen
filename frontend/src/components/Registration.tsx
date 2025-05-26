@@ -112,12 +112,10 @@ export default function RegistrationForm() {
     "/mon-hoc-theo-khoi"
   );
 
-  const {
-    callApi: createForm,
-    loading,
-    error,
-    data,
-  } = useApi<any, FormData>("POST", "/create-form-xet-tuyen");
+  const { callApi: createForm } = useApi<any, FormData>(
+    "POST",
+    "/create-form-xet-tuyen"
+  );
 
   const {
     register,
@@ -125,6 +123,7 @@ export default function RegistrationForm() {
     watch,
     setValue,
     formState: { errors },
+    reset,
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -188,6 +187,7 @@ export default function RegistrationForm() {
 
     if (!error) {
       toast.success("Gửi form xét tuyển thành công!");
+      reset();
     } else {
       toast.error("Gửi thất bại: " + error);
     }
