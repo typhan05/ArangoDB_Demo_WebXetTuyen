@@ -32,6 +32,8 @@ Start Backend
   uvicorn main:app --reload
 ```
 
+Lưu Ý: Sửa file _.env.example_ => _.env_ để add key server upload FileHocBa
+
 => Server Backend start http://localhost:8000/docs
 
 Start Frontend
@@ -42,6 +44,6 @@ Start Frontend
   yarn dev
 ```
 
-Lưu Ý: Sửa file _.env.example_ => _.env_ và bỏ comment **NEXT_PUBLIC_BASE_URL** để call backend api
+Lưu Ý: Sửa file _.env.example_ => _.env_ để call backend api
 
 => Server Frontend start http://localhost:5173
