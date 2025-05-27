@@ -1,3 +1,6 @@
 fastapi 
 uvicorn 
 python-arango
+boto3
+python-multipart
+python-dotenv

@@ -1,9 +1,11 @@
 from datetime import datetime
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, File, Query, UploadFile
 from arango import ArangoClient
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from file_uploader import FileUploader
+from typing import Optional, TypeVar
 
 # Khởi tạo FastAPI
 app = FastAPI()
@@ -45,12 +47,29 @@ class FormXetTuyenRequest(BaseModel):
     duHoc: bool
     maDotXetTuyen: str
     maHinhThucXetTuyen: str
-    nganhHoc: str
+    nganhHocId: str
+    fileUrl: str
+
+T = TypeVar('T')
+class ResponseSchema(BaseModel):
+    detail: str
+    result: Optional[T] = None
+
+
 
 @app.get("/")
 def read_root():
     return {"message": "API FastAPI kết nối ArangoDB"}
 
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    try:
+        result = await FileUploader.upload_file(file)
+        return ResponseSchema(detail="Successfully uploaded!", result={"url": result})
+    except Exception as e:
+            print(e)
+            return ResponseSchema(detail=str(e))
+    
 @app.get("/form-xet-tuyen")
 def get_form_xet_tuyen():
     try:
@@ -91,17 +110,13 @@ def get_nganh_hoc():
         return JSONResponse(status_code=500, content={"error": str(e)})
     
 @app.get("/khoi-xet-tuyen")
-def get_khoi_xet_tuyen_by_ma_nganh(ma_nganh: int = Query(..., description="Mã ngành học, ví dụ: 7140201")):
+def get_khoi_xet_tuyen_by_ma_nganh(
+    ma_nganh: str = Query(..., description="Mã ngành học, ví dụ: NganhHoc/251975")
+):
     try:
         aql = """
-        LET nganh = FIRST(
-            FOR n IN NganhHoc
-                FILTER n.MaNganhHoc == @ma_nganh
-                RETURN n
-        )
-
         FOR edge IN KhoiXetTuyen_NganhHoc
-            FILTER edge._from == nganh._id
+            FILTER edge._from == @ma_nganh
             FOR khoi IN KhoiXetTuyen
                 FILTER khoi._id == edge._to
                 RETURN khoi
@@ -112,11 +127,12 @@ def get_khoi_xet_tuyen_by_ma_nganh(ma_nganh: int = Query(..., description="Mã n
         }
 
         cursor = db.aql.execute(aql, bind_vars=bind_vars)
-        result = [doc for doc in cursor]
+        result = list(cursor)
 
         return JSONResponse(content=result)
+
     except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
 
 @app.get("/mon-hoc-theo-khoi")
 def get_mon_hoc_by_ma_khoi(ma_khoi: str = Query(..., description="Mã khối xét tuyển, ví dụ: A00")):
@@ -191,7 +207,8 @@ def create_form(payload: FormXetTuyenRequest):
           CoNguyenVongDuHoc: @CoNguyenVongDuHoc,
           NgayDangKy: @NgayDangKy,
           MaTruong: @MaTruong,
-          DiemThi: @DiemThi
+          DiemThi: @DiemThi,
+          FileHocBa: @FileHocBa
         }
 
         INSERT newForm INTO FormXetTuyen
@@ -203,7 +220,29 @@ def create_form(payload: FormXetTuyenRequest):
         LET hinhthuc = FIRST(FOR h IN HinhThucXetTuyen FILTER h.MaHinhThucXetTuyen == @MaHinhThucXetTuyen RETURN h)
         INSERT { _from: inserted._id, _to: hinhthuc._id } INTO FormXetTuyen_HinhThucXetTuyen
 
-        INSERT { _from: inserted._id, _to: @NganhHocId } INTO FormXetTuyen_NganhHoc
+        LET chuyen_nganh = FIRST(
+            FOR cn IN ChuyenNganh_NganhHoc
+            FILTER cn._to == @NganhHocId
+            RETURN cn._from
+        )
+
+        LET has_chuyen_nganh = chuyen_nganh != null
+        LET target_id = has_chuyen_nganh ? chuyen_nganh : @NganhHocId
+
+        LET temp1 = (
+            FOR i IN 1..1
+                FILTER has_chuyen_nganh
+                INSERT { _from: inserted._id, _to: target_id } INTO FormXetTuyen_ChuyenNganh
+                RETURN 1
+        )
+
+        LET temp2 = (
+            FOR i IN 1..1
+                FILTER !has_chuyen_nganh
+                INSERT { _from: inserted._id, _to: target_id } INTO FormXetTuyen_NganhHoc
+                RETURN 1
+        )
+
         INSERT { _from: inserted._id, _to: @KhoiId } INTO FormXetTuyen_KhoiXetTuyen
 
         RETURN inserted
@@ -225,8 +264,9 @@ def create_form(payload: FormXetTuyenRequest):
             "DiemThi": payload.diem,
             "MaDotXetTuyen": payload.maDotXetTuyen,
             "MaHinhThucXetTuyen": payload.maHinhThucXetTuyen,
-            "NganhHocId": f"NganhHoc/{payload.nganhHoc}",
-            "KhoiId": f"KhoiXetTuyen/{payload.khoi}"
+            "NganhHocId": payload.nganhHocId,
+            "KhoiId": f"KhoiXetTuyen/{payload.khoi}",
+            "FileHocBa": payload.fileUrl
         }
 
         cursor = db.aql.execute(aql, bind_vars=bind_vars)
