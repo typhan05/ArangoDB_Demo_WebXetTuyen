@@ -45,7 +45,15 @@ const schema = z
         })
     ),
     namTotNghiep: z.string().optional(),
-    file: z.any().optional(),
+    file: z.custom<File>((val) => {
+      return (
+        (val !== null &&
+          val !== undefined &&
+          val !== "" &&
+          val instanceof File) ||
+        (val.length > 0 && val[0] instanceof File)
+      );
+    }, "Vui lòng upload file Học bạ"),
     fileUrl: z.string().optional(),
     duHoc: z.boolean().optional(),
   })
@@ -71,8 +79,9 @@ interface Truong {
   MaTruong: string;
   TenTruong: string;
 }
-interface NghanhHoc {
+interface NghanhHocChuyenNghanh {
   _id: string;
+  idNganh: string;
   TenNganhHoc: string;
 }
 interface MonHoc {
@@ -103,10 +112,9 @@ export default function RegistrationForm() {
     "GET",
     "/truong-thpt"
   );
-  const { data: dataNganhHoc, callApi: callApiNghanhHoc } = useApi<NghanhHoc[]>(
-    "GET",
-    "/nganh-hoc"
-  );
+  const { data: dataNganhHoc, callApi: callApiNghanhHoc } = useApi<
+    NghanhHocChuyenNghanh[]
+  >("GET", "/nganh-hoc-chuyen-nghanh");
   const { data: dataKhoi, callApi: callApiKhoi } = useApi<KhoiXet[]>(
     "GET",
     "/khoi-xet-tuyen"
@@ -163,7 +171,12 @@ export default function RegistrationForm() {
 
   useEffect(() => {
     if (selectedMaNghanh) {
-      callApiKhoi({ ma_nganh: selectedMaNghanh });
+      const selectedNganh = dataNganhHoc?.find(
+        (nganh) => nganh._id === selectedMaNghanh
+      );
+      if (selectedNganh) {
+        callApiKhoi({ ma_nganh: selectedNganh.idNganh }); // dùng idNganh để gọi API
+      }
     }
   }, [selectedMaNghanh]);
 
@@ -363,7 +376,7 @@ export default function RegistrationForm() {
               options={
                 dataNganhHoc?.map((nganh) => ({
                   label: nganh.TenNganhHoc,
-                  value: String(nganh._id),
+                  value: nganh._id,
                 })) || []
               }
               value={watch("nganhHocId")}
@@ -475,6 +488,9 @@ export default function RegistrationForm() {
                 </svg>
               )}
               <input type="hidden" {...register("fileUrl")} />
+              <p className="text-red-500 text-sm absolute left-0 -bottom-6">
+                {errors.file?.message as any}
+              </p>
             </div>
           </div>
         </div>

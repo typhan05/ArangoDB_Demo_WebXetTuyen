@@ -3,9 +3,8 @@ from fastapi import FastAPI, File, Query, UploadFile
 from arango import ArangoClient
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from schema import ResponseSchema, FormXetTuyenRequest
 from file_uploader import FileUploader
-from typing import Optional, TypeVar
 
 # Khởi tạo FastAPI
 app = FastAPI()
@@ -31,31 +30,6 @@ client = ArangoClient(hosts="http://localhost:8529")
 
 # Xác thực và chọn database
 db = client.db("XetTuyenDaiHoc", username="root", password="root")
-
-class FormXetTuyenRequest(BaseModel):
-    fullName: str
-    dob: str
-    cccd: str
-    email: str
-    phone: str
-    address: str
-    gender: str
-    truong: str
-    khoi: str
-    diem: str
-    namTotNghiep: str
-    duHoc: bool
-    maDotXetTuyen: str
-    maHinhThucXetTuyen: str
-    nganhHocId: str
-    fileUrl: str
-
-T = TypeVar('T')
-class ResponseSchema(BaseModel):
-    detail: str
-    result: Optional[T] = None
-
-
 
 @app.get("/")
 def read_root():
@@ -100,11 +74,54 @@ def get_truong_thpt(ma_tinh: str = Query(..., description="Mã tỉnh")):
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
     
-@app.get("/nganh-hoc")
+@app.get("/nganh-hoc-chuyen-nghanh")
 def get_nganh_hoc():
     try:
-        cursor = db.collection("NganhHoc").all()
-        result = [doc for doc in cursor]
+        aql = """
+        FOR nganh IN NganhHoc
+            LET chuyen_nganh = (
+                FOR cn IN ChuyenNganh_NganhHoc
+                    FILTER cn._to == nganh._id
+                    FOR chuyen IN ChuyenNganh
+                        FILTER chuyen._id == cn._from
+                        RETURN {
+                            TenChuyenNganh: chuyen.TenChuyenNganh,
+                            _id: chuyen._id
+                        }
+            )
+            RETURN {
+                MaNganhHoc: nganh.MaNganhHoc,
+                DiemDau: nganh.DiemDau,
+                TenNganhHoc: nganh.TenNganhHoc,
+                idNganh: nganh._id,
+                TrangThai: nganh.TrangThai,
+                ChuyenNganh: chuyen_nganh
+            }
+        """
+        cursor = db.aql.execute(aql)
+        result = []
+
+        for item in cursor:
+            if item["ChuyenNganh"]:
+                for cn in item["ChuyenNganh"]:
+                    result.append({
+                        "MaNganhHoc": item["MaNganhHoc"],
+                        "DiemDau": item["DiemDau"],
+                        "TenNganhHoc": f"{item['TenNganhHoc']} ({cn['TenChuyenNganh']})",
+                        "_id": cn["_id"],
+                        "idNganh": item["idNganh"],
+                        "TrangThai": item["TrangThai"]
+                    })
+            else:
+                result.append({
+                    "MaNganhHoc": item["MaNganhHoc"],
+                    "DiemDau": item["DiemDau"],
+                    "TenNganhHoc": item["TenNganhHoc"],
+                    "_id": item["idNganh"],
+                    "idNganh": item["idNganh"],
+                    "TrangThai": item["TrangThai"]
+                })
+
         return JSONResponse(content=result)
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
@@ -214,35 +231,33 @@ def create_form(payload: FormXetTuyenRequest):
         INSERT newForm INTO FormXetTuyen
         LET inserted = NEW
 
+        // Liên kết đợt xét tuyển
         LET dot = FIRST(FOR d IN DotXetTuyen FILTER d.MaDotXetTuyen == @MaDotXetTuyen RETURN d)
         INSERT { _from: inserted._id, _to: dot._id } INTO FormXetTuyen_DotXetTuyen
 
+        // Liên kết hình thức xét tuyển
         LET hinhthuc = FIRST(FOR h IN HinhThucXetTuyen FILTER h.MaHinhThucXetTuyen == @MaHinhThucXetTuyen RETURN h)
         INSERT { _from: inserted._id, _to: hinhthuc._id } INTO FormXetTuyen_HinhThucXetTuyen
 
-        LET chuyen_nganh = FIRST(
-            FOR cn IN ChuyenNganh_NganhHoc
-            FILTER cn._to == @NganhHocId
-            RETURN cn._from
-        )
-
-        LET has_chuyen_nganh = chuyen_nganh != null
-        LET target_id = has_chuyen_nganh ? chuyen_nganh : @NganhHocId
+        // Phân biệt: chuyên ngành hay ngành học
+        LET isChuyenNganh = LIKE(@NganhHocId, "ChuyenNganh/%")
+        LET isNganhHoc = LIKE(@NganhHocId, "NganhHoc/%")
 
         LET temp1 = (
             FOR i IN 1..1
-                FILTER has_chuyen_nganh
-                INSERT { _from: inserted._id, _to: target_id } INTO FormXetTuyen_ChuyenNganh
+                FILTER isChuyenNganh
+                INSERT { _from: inserted._id, _to: @NganhHocId } INTO FormXetTuyen_ChuyenNganh
                 RETURN 1
         )
-
+        
         LET temp2 = (
             FOR i IN 1..1
-                FILTER !has_chuyen_nganh
-                INSERT { _from: inserted._id, _to: target_id } INTO FormXetTuyen_NganhHoc
+                FILTER isNganhHoc
+                INSERT { _from: inserted._id, _to: @NganhHocId } INTO FormXetTuyen_NganhHoc
                 RETURN 1
         )
 
+        // Khối xét tuyển
         INSERT { _from: inserted._id, _to: @KhoiId } INTO FormXetTuyen_KhoiXetTuyen
 
         RETURN inserted
