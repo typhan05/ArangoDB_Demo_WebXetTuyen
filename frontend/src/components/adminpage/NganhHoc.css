@@ -1,0 +1,202 @@
+/* General styles */
+.container {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    width: 100%;              /* chiếm toàn bộ chiều ngang */
+    height: 300px;            /* chiều cao cố định */
+    max-width: none;          /* bỏ giới hạn max-width */
+    
+    box-sizing: border-box;   /* tính padding trong chiều cao, chiều rộng */
+}
+
+
+
+
+.title {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Search bar */
+input[type="text"] {
+    padding: 8px;
+    width: 100%;
+    max-width: 300px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    margin-bottom: 20px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Table styles */
+.table-container {
+    margin-top: 20px;
+    
+}
+
+table {
+    width: 130%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #ddd;
+    color: #333;
+}
+
+th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+td {
+    background-color: #fff;
+}
+
+/* Button styles */
+button {
+    cursor: pointer;
+    border: none;
+    padding: 6px 12px;
+    font-size: 14px;
+    border-radius: 4px;
+}
+
+.edit-btn {
+    background-color: #ffcc00;
+    color: white;
+}
+
+.delete-btn {
+    background-color: #f44336;
+    color: white;
+}
+
+.expand-btn {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+}
+
+/* State styles */
+input[type="checkbox"] {
+    cursor: pointer;
+}
+
+/* Row expansion styles */
+tr.expanded-row {
+    background-color: #f9f9f9;
+}
+
+td[colspan="10"] {
+    padding: 10px 20px;
+    background-color: #f9f9f9;
+    border: none;
+}
+
+h4 {
+    margin-top: 10px;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+/* Loader styles */
+p {
+    font-size: 16px;
+    color: #333;
+}
+
+p.red {
+    color: red;
+}
+
+td[colspan="10"] {
+    text-align: center;
+    color: #999;
+    font-size: 16px;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    background-color: #ddd;
+}
+
+button.edit-btn:disabled {
+    background-color: #ffcc00;
+}
+
+button.delete-btn:disabled {
+    background-color: #f44336;
+}
+.input-section {
+    max-width: 800px;   
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.input-section h3 {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+
+.input-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;  
+}
+
+
+.input-section input {
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+    transition: border 0.3s;
+}
+
+
+.input-section input:focus {
+    border-color: #4CAF50;
+}
+
+
+.input-section button {
+    padding: 12px 20px;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+
+.input-section button:hover {
+    background-color: #45a049;
+}
+
+
+.input-section button:disabled {
+    background-color: #aaa;
+    cursor: not-allowed;
+}
+
+
+.input-section input::placeholder {
+    color: #888;
+}

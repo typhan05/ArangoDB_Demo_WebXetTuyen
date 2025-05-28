@@ -15,7 +15,6 @@ import { InputField } from "./form/InputField";
 import { SelectField } from "./form/SelectField";
 import { DatePickerField } from "./form/DatePickerField";
 import { toast } from "sonner";
-import useUploadFile from "@/hooks/useUploadFile";
 
 const schema = z
   .object({
@@ -33,7 +32,7 @@ const schema = z
     tinh: z.string().min(1, "Vui lòng chọn tỉnh/thành phố"),
     truong: z.string().min(1, "Vui lòng chọn trường THPT"),
     bacHoc: z.string().min(1, "Vui lòng chọn bậc học"),
-    nganhHocId: z.string().min(1, "Vui lòng chọn ngành học"),
+    nganhHoc: z.string().min(1, "Vui lòng chọn ngành học"),
     khoi: z.string().min(1, "Vui lòng chọn tổ hợp"),
     diem: z.record(
       z
@@ -45,16 +44,7 @@ const schema = z
         })
     ),
     namTotNghiep: z.string().optional(),
-    file: z.custom<File>((val) => {
-      return (
-        (val !== null &&
-          val !== undefined &&
-          val !== "" &&
-          val instanceof File) ||
-        (val.length > 0 && val[0] instanceof File)
-      );
-    }, "Vui lòng upload file Học bạ"),
-    fileUrl: z.string().optional(),
+    file: z.any().optional(),
     duHoc: z.boolean().optional(),
   })
   .refine(
@@ -79,9 +69,8 @@ interface Truong {
   MaTruong: string;
   TenTruong: string;
 }
-interface NghanhHocChuyenNghanh {
-  _id: string;
-  idNganh: string;
+interface NghanhHoc {
+  MaNganhHoc: number;
   TenNganhHoc: string;
 }
 interface MonHoc {
@@ -89,7 +78,7 @@ interface MonHoc {
   _id: string;
 }
 interface KhoiXet {
-  MaKhoi: string;
+  MaKhoi: number;
   _id: string;
 }
 
@@ -99,10 +88,8 @@ const educationLevels = ["Đại học", "Cao đẳng", "Trung cấp"];
 
 export default function RegistrationForm() {
   const [selectedMaTinh, setSelectedMaTinh] = useState("");
-  const [selectedMaNghanh, setSelectedMaNghanh] = useState<string>();
+  const [selectedMaNghanh, setSelectedMaNghanh] = useState<number>();
   const [selectedMaKhoi, setSelectedMaKhoi] = useState("");
-  const [fileName, setFileName] = useState("");
-  const { upload, loading: loadingUpload } = useUploadFile();
 
   const { data: dataTinhTp, callApi: callApiTinhTp } = useApi<TinhTP[]>(
     "GET",
@@ -112,9 +99,10 @@ export default function RegistrationForm() {
     "GET",
     "/truong-thpt"
   );
-  const { data: dataNganhHoc, callApi: callApiNghanhHoc } = useApi<
-    NghanhHocChuyenNghanh[]
-  >("GET", "/nganh-hoc-chuyen-nghanh");
+  const { data: dataNganhHoc, callApi: callApiNghanhHoc } = useApi<NghanhHoc[]>(
+    "GET",
+    "/nganh-hoc"
+  );
   const { data: dataKhoi, callApi: callApiKhoi } = useApi<KhoiXet[]>(
     "GET",
     "/khoi-xet-tuyen"
@@ -149,7 +137,7 @@ export default function RegistrationForm() {
       tinh: "",
       truong: "",
       bacHoc: "",
-      nganhHocId: "",
+      nganhHoc: "",
       khoi: "",
       diem: {},
       duHoc: false,
@@ -171,12 +159,7 @@ export default function RegistrationForm() {
 
   useEffect(() => {
     if (selectedMaNghanh) {
-      const selectedNganh = dataNganhHoc?.find(
-        (nganh) => nganh._id === selectedMaNghanh
-      );
-      if (selectedNganh) {
-        callApiKhoi({ ma_nganh: selectedNganh.idNganh }); // dùng idNganh để gọi API
-      }
+      callApiKhoi({ ma_nganh: selectedMaNghanh });
     }
   }, [selectedMaNghanh]);
 
@@ -185,19 +168,6 @@ export default function RegistrationForm() {
       callApiMonHoc({ ma_khoi: selectedMaKhoi });
     }
   }, [selectedMaKhoi]);
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFileName(file.name);
-      const url = await upload(file);
-
-      if (url) {
-        // Gán url vào field "fileUrl" để gửi cùng form
-        setValue("fileUrl", url);
-      }
-    }
-  };
 
   const onSubmit = async (data: FormData) => {
     const diemFormatted = dataMonHoc
@@ -212,9 +182,7 @@ export default function RegistrationForm() {
       maDotXetTuyen: "5",
       maHinhThucXetTuyen: "HB12",
       diem: diemFormatted,
-      file: fileName,
     };
-    console.log("Form submit:", payload);
     const { error } = await createForm(payload as any);
 
     if (!error) {
@@ -370,21 +338,21 @@ export default function RegistrationForm() {
 
           <div>
             <SelectField
-              id="nganhHocId"
+              id="nganhHoc"
               label="Ngành học"
               placeholder="Chọn ngành học"
               options={
                 dataNganhHoc?.map((nganh) => ({
                   label: nganh.TenNganhHoc,
-                  value: nganh._id,
+                  value: String(nganh.MaNganhHoc),
                 })) || []
               }
-              value={watch("nganhHocId")}
+              value={watch("nganhHoc")}
               onChange={(val) => {
-                setValue("nganhHocId", val);
-                setSelectedMaNghanh(val);
+                setValue("nganhHoc", val);
+                setSelectedMaNghanh(Number(val));
               }}
-              error={errors.nganhHocId}
+              error={errors.nganhHoc}
             />
             <p className="note">
               (Ghi chú: Thí sinh được phép chuyển đổi ngành phù hợp sau 1 Học kỳ
@@ -398,8 +366,8 @@ export default function RegistrationForm() {
             placeholder="Chọn tổ hợp"
             options={
               dataKhoi?.map((khoi) => ({
-                label: khoi.MaKhoi,
-                value: khoi.MaKhoi,
+                label: khoi.MaKhoi.toString(),
+                value: khoi.MaKhoi.toString(),
               })) || []
             }
             value={watch("khoi")}
@@ -447,58 +415,15 @@ export default function RegistrationForm() {
             <Label htmlFor="duHoc">Nguyện vọng du học</Label>
           </div>
 
-          <div className="space-y-1">
-            <Label>Năm tốt nghiệp</Label>
-            <Input
-              {...register("namTotNghiep")}
-              placeholder="Năm tốt nghiệp (bỏ qua nếu chưa tốt nghiệp)"
-              type="number"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label>File học bạ (.pdf):</Label>
-            <div className={`relative`}>
-              <Input
-                {...register("file")}
-                type="file"
-                accept=".pdf"
-                onChange={handleFileChange}
-                className={`${loadingUpload ? "opacity-40" : ""}`}
-              />
-              {loadingUpload && (
-                <svg
-                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-5 animate-spin text-blue-600"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx={12}
-                    cy={12}
-                    r={10}
-                    stroke="currentColor"
-                    strokeWidth={4}
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-              )}
-              <input type="hidden" {...register("fileUrl")} />
-              <p className="text-red-500 text-sm absolute left-0 -bottom-6">
-                {errors.file?.message as any}
-              </p>
-            </div>
-          </div>
+          <Input
+            {...register("namTotNghiep")}
+            placeholder="Năm tốt nghiệp (bỏ qua nếu chưa tốt nghiệp)"
+            type="number"
+          />
+          <Input {...register("file")} type="file" />
         </div>
         <div className="text-center">
-          <Button
-            type="submit"
-            className="mt-6 cursor-pointer text-white bg-blue-700 hover:bg-blue-800"
-          >
+          <Button type="submit" className="mt-6 cursor-pointer">
             Đăng ký xét tuyển
           </Button>
         </div>
