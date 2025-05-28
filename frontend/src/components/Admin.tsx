@@ -3,6 +3,7 @@ import NganhHoc from "./adminpage/NganhHoc"; // Import NganhHoc component
 import DanhSachTinh from "./adminpage/DanhSachTinh"; // Import DanhSachTinh component
 import KhoiXetTuyenMonHoc from "./adminpage/KhoiXetTuyenMonHoc"; // Import KhoiXetTuyenMonHoc component
 import KetQuaLop12 from "./adminpage/KetQuaLop12"; // Import KetQuaLop12 component
+import DotXetTuyen from "./adminpage/DotXetTuyen";
 const AdminPage = () => {
   const [activeMenu, setActiveMenu] = useState("home"); // Mặc định là Trang chủ
   const [isInfoOpen, setIsInfoOpen] = useState(false); // Trạng thái mở Quản lý thông tin
@@ -186,6 +187,7 @@ const AdminPage = () => {
             </div>
           )}
           {/* Nội dung submenu quản lý thông tin */}
+          {activeMenu === "dotXetTuyen" && <DotXetTuyen />}
           {activeMenu === "danhSachTinh" && <DanhSachTinh />}
           {activeMenu === "danhSachMon" && <KhoiXetTuyenMonHoc />}{" "}
           {/* Hiển thị danh sách môn học */}

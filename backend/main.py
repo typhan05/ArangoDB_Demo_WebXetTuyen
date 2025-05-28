@@ -311,6 +311,16 @@ def create_form(payload: FormXetTuyenRequest):
 #       ADMIN API              #
 #------------------------------#
 
+@app.get("/dot-xet-tuyen")
+def get_dot_xet_tuyen():
+    try:
+        query = "FOR d IN DotXetTuyen FILTER d.KichHoat == '1' RETURN d"
+        cursor = db.aql.execute(query)
+        result = [doc for doc in cursor]
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
 @app.get("/danh-sach-mon-hoc")
 def get_danh_sach_mon_hoc():
     try:
