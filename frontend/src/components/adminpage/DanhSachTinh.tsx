@@ -1,5 +1,6 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Button } from "../ui/button";
 
 // Định nghĩa kiểu dữ liệu cho Tỉnh và Trường THPT
 interface Tinh {
@@ -200,11 +201,11 @@ const TinhTp = () => {
   )?.TenTinh;
 
   return (
-    <div>
+    <div className="relative h-full">
       <h2 className="font-bold">Danh sách Tỉnh - TP</h2>
       {/* Hiển thị bảng các tỉnh */}
       {!selectedTinh && (
-        <div className="overflow-auto max-w-full max-h-[80vh]">
+        <div className="overflow-auto max-w-full max-h-[74vh]">
           <table className="w-full">
             <colgroup>
               <col className="w-[15%]" />
@@ -246,7 +247,10 @@ const TinhTp = () => {
                     </button>
                   </td>
                   <td>
-                    <button onClick={() => setSelectedTinh(tinh.MaTinh)}>
+                    <button
+                      onClick={() => setSelectedTinh(tinh.MaTinh)}
+                      className="underline text-blue-600"
+                    >
                       Xem Trường THPT
                     </button>
                   </td>
@@ -264,34 +268,36 @@ const TinhTp = () => {
           <button onClick={() => setSelectedTinh(null)}>Quay lại</button>
 
           {truongData.length > 0 ? (
-            <table>
-              <thead>
-                <tr>
-                  <th>STT</th>
-                  <th>Tên Trường</th>
-                  <th>Sửa</th>
-                  <th>Xóa</th>
-                </tr>
-              </thead>
-              <tbody>
-                {truongData.map((truong, index) => (
-                  <tr key={truong._id}>
-                    <td>{index + 1}</td>
-                    <td>{truong.TenTruong}</td>
-                    <td>
-                      <button onClick={() => handleEditTruong(truong)}>
-                        Sửa
-                      </button>
-                    </td>
-                    <td>
-                      <button onClick={() => handleDeleteTruong(truong._id)}>
-                        Xóa
-                      </button>
-                    </td>
+            <div className="overflow-auto max-w-full max-h-[65vh]">
+              <table className="w-full bg-white">
+                <thead>
+                  <tr>
+                    <th>STT</th>
+                    <th>Tên Trường</th>
+                    <th>Sửa</th>
+                    <th>Xóa</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {truongData.map((truong, index) => (
+                    <tr key={truong._id}>
+                      <td>{index + 1}</td>
+                      <td>{truong.TenTruong}</td>
+                      <td>
+                        <button onClick={() => handleEditTruong(truong)}>
+                          Sửa
+                        </button>
+                      </td>
+                      <td>
+                        <button onClick={() => handleDeleteTruong(truong._id)}>
+                          Xóa
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <p>Không có trường THPT nào cho tỉnh này.</p>
           )}
@@ -300,33 +306,56 @@ const TinhTp = () => {
 
       {/* Form sửa Tỉnh */}
       {editingTinh && (
-        <div>
-          <h3>Sửa Tỉnh</h3>
-          <input
-            type="text"
-            value={editingTinh.TenTinh}
-            onChange={(e) =>
-              setEditingTinh({ ...editingTinh, TenTinh: e.target.value })
-            }
-          />
-          <button onClick={() => handleSaveTinh(editingTinh)}>Lưu</button>
-          <button onClick={() => setEditingTinh(null)}>Hủy</button>
+        <div className="absolute bottom-0 -left-5 right-0 shadow-md rounded-2xl px-5 py-4 bg-white">
+          <h3 className="font-bold text-lg mb-3">📝 Sửa Tỉnh</h3>
+          <div className="flex gap-2">
+            <input
+              className="border rounded-md px-2 py-1"
+              type="text"
+              value={editingTinh.TenTinh}
+              onChange={(e) =>
+                setEditingTinh({ ...editingTinh, TenTinh: e.target.value })
+              }
+            />
+            <Button
+              onClick={() => handleSaveTinh(editingTinh)}
+              variant="outline"
+            >
+              💾 Lưu
+            </Button>
+            <Button onClick={() => setEditingTinh(null)} variant="outline">
+              ❌ Hủy
+            </Button>
+          </div>
         </div>
       )}
 
       {/* Form sửa Trường */}
       {editingTruong && (
-        <div>
-          <h3>Sửa Trường</h3>
-          <input
-            type="text"
-            value={editingTruong.TenTruong}
-            onChange={(e) =>
-              setEditingTruong({ ...editingTruong, TenTruong: e.target.value })
-            }
-          />
-          <button onClick={() => handleSaveTruong(editingTruong)}>Lưu</button>
-          <button onClick={() => setEditingTruong(null)}>Hủy</button>
+        <div className="absolute bottom-0 -left-5 right-0 shadow-md rounded-2xl px-5 py-4 bg-white">
+          <h3 className="font-bold text-lg mb-3">📝 Sửa Trường</h3>
+          <div className="flex gap-2">
+            <input
+              className="border rounded-md px-2 py-1"
+              type="text"
+              value={editingTruong.TenTruong}
+              onChange={(e) =>
+                setEditingTruong({
+                  ...editingTruong,
+                  TenTruong: e.target.value,
+                })
+              }
+            />
+            <Button
+              onClick={() => handleSaveTruong(editingTruong)}
+              variant="outline"
+            >
+              💾 Lưu
+            </Button>
+            <Button onClick={() => setEditingTruong(null)} variant="outline">
+              ❌ Hủy
+            </Button>
+          </div>
         </div>
       )}
     </div>

@@ -294,9 +294,9 @@ def create_form(payload: FormXetTuyenRequest):
             "DiemThi": payload.diem,
             "MaDotXetTuyen": payload.maDotXetTuyen,
             "MaHinhThucXetTuyen": payload.maHinhThucXetTuyen,
-            "NganhHocId": f"NganhHoc/{payload.nganhHoc}",
+            "NganhHocId": payload.nganhHocId,
             "KhoiId": f"KhoiXetTuyen/{payload.khoi}",
-            "MaNganhHoc": payload.nganhHoc
+            "FileHocBa": payload.fileUrl
         }
 
         cursor = db.aql.execute(aql, bind_vars=bind_vars)
