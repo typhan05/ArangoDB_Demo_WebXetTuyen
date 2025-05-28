@@ -2,6 +2,7 @@
 .admin-container {
   display: flex;
   height: 100vh;
+  width: 100%;
   background-color: #f8f9fa;
 }
 
@@ -26,15 +27,12 @@
 }
 /* Sidebar */
 .admin-sidebar {
-  position: fixed;
-  top: 60px;
-  left: 0;
   width: 250px;
-  height: calc(100vh - 60px);
   background-color: white;
   border-right: 1px solid #ddd;
   padding-top: 10px;
   overflow-y: auto;
+  max-height: 100%;
 }
 
 /* Danh sách menu */
@@ -135,17 +133,15 @@
 
 /* Nội dung chính */
 .admin-main {
-  margin-left: 250px;
-  padding: 20px;
-  width: calc(100% - 250px);
+  display: flex;
+  width: 100%;
+  padding-top: 60px;
 }
 
 /* Nội dung hiển thị khi click */
 .admin-content {
-  padding: 50px;
+  padding: 20px 15px 20px 40px;
   background: #f8f9fa;
-  min-height: calc(100vh - 60px); /* Đảm bảo nội dung không bị cắt */
-  margin-right: 250px; /* Đẩy nội dung sang phải để không đè lên sidebar */
   width: calc(100% - 250px);
 }
 
@@ -180,4 +176,25 @@
 
 .admin-grid button:hover {
   background: #f1f1f1;
+}
+
+button {
+  cursor: pointer;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+th,
+td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #f2f2f2;
 }
