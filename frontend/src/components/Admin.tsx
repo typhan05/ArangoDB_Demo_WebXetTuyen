@@ -4,6 +4,7 @@ import DanhSachTinh from "./adminpage/DanhSachTinh"; // Import DanhSachTinh comp
 import KhoiXetTuyenMonHoc from "./adminpage/KhoiXetTuyenMonHoc"; // Import KhoiXetTuyenMonHoc component
 import KetQuaLop12 from "./adminpage/KetQuaLop12"; // Import KetQuaLop12 component
 import DotXetTuyen from "./adminpage/DotXetTuyen";
+import CapNhatChuyenNganh from "./adminpage/Details/CapNhatChuyenNganh";
 const AdminPage = () => {
   const [activeMenu, setActiveMenu] = useState("home"); // Mặc định là Trang chủ
   const [isInfoOpen, setIsInfoOpen] = useState(false); // Trạng thái mở Quản lý thông tin

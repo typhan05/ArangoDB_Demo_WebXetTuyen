@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Button } from "../ui/button";
+import CapNhatChuyenNganh from "./Details/CapNhatChuyenNganh";
 // import "./NganhHoc.css";
 
 interface NganhHoc {
@@ -20,39 +21,206 @@ interface KhoiXetTuyen {
 interface ChuyenNganh {
   MaChuyenNganh: number;
   TenChuyenNganh: string;
+  KhoiXetTuyen?: string[];
 }
 
 const KhoiXetTuyenDetail: React.FC<{
-  maNganh: number;
+  maNganh: number; // MaNganhHoc
   khoiXetTuyenData: Record<number, KhoiXetTuyen[]>;
   onBack: () => void;
-}> = ({ maNganh, khoiXetTuyenData, onBack }) => (
-  <div>
-    <button onClick={onBack} style={{ marginBottom: "10px" }}>
-      🔙 Quay lại danh sách ngành
-    </button>
-    <h4>Khối xét tuyển của ngành {maNganh}</h4>
-    {khoiXetTuyenData[maNganh]?.length > 0 ? (
-      <div className="overflow-auto max-w-full max-h-[80vh]">
-        <table className="w-full">
+}> = ({ maNganh, khoiXetTuyenData, onBack }) => {
+  const [maKhoiCu, setMaKhoiCu] = useState("");       // Mã khối cũ muốn đổi
+  const [maKhoiMoi, setMaKhoiMoi] = useState("");     // Mã khối mới nhập vào
+  const [message, setMessage] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!maKhoiCu || !maKhoiMoi) {
+      setMessage("Vui lòng nhập đầy đủ mã khối cũ và mã khối mới.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/cap-nhat-khoi-nganh/${maNganh}/${maKhoiCu}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ MaKhoiMoi: maKhoiMoi }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setMessage(`Lỗi: ${errorData.detail || "Cập nhật thất bại"}`);
+        return;
+      }
+
+      const data = await response.json();
+      setMessage(data.message || "Cập nhật thành công!");
+    } catch (error) {
+      setMessage(
+        "Lỗi khi gọi API: " + (error instanceof Error ? error.message : String(error))
+      );
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={onBack} style={{ marginBottom: "10px" }}>
+        🔙 Quay lại danh sách ngành
+      </button>
+
+      <h4>Khối xét tuyển của ngành {maNganh}</h4>
+
+      {khoiXetTuyenData[maNganh]?.length > 0 ? (
+        <div className="overflow-auto max-w-full max-h-[80vh]">
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th>Mã Khối</th>
+                <th>Môn học</th>
+                <th>Chọn làm khối cũ</th>
+                <th>Xóa</th>
+              </tr>
+            </thead>
+            <tbody>
+              {khoiXetTuyenData[maNganh].map((khoi, index) => (
+                <tr key={index}>
+                  <td>{khoi.MaKhoi}</td>
+                  <td>
+                    <ul>
+                      {khoi.TenMon.map((mon, idx) => (
+                        <li key={idx}>{mon}</li>
+                      ))}
+                    </ul>
+                  </td>
+                  <td>
+                    <button
+                      onClick={() => setMaKhoiCu(khoi.MaKhoi)}
+                      className={
+                        maKhoiCu === khoi.MaKhoi
+                          ? "bg-blue-500 text-white px-2 py-1 rounded"
+                          : "bg-gray-200 px-2 py-1 rounded"
+                      }
+                    >
+                      {maKhoiCu === khoi.MaKhoi ? "Đang chọn" : "Chọn"}
+                    </button>
+                  </td>
+                  <td>
+                    <button className="text-red-500">🗑 Xóa</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p>⏳ Đang tải môn học hoặc không có dữ liệu...</p>
+      )}
+
+      <h3 className="font-bold text-lg mb-3">➕ Cập nhật Mã Khối Xét Tuyển</h3>
+
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>
+            Mã khối cũ (chọn ở trên hoặc nhập lại):
+            <input
+              type="text"
+              value={maKhoiCu}
+              onChange={(e) => setMaKhoiCu(e.target.value)}
+              required
+              placeholder="Mã khối cũ"
+            />
+          </label>
+        </div>
+        <div>
+          <label>
+            Mã khối mới:
+            <input
+              type="text"
+              value={maKhoiMoi}
+              onChange={(e) => setMaKhoiMoi(e.target.value)}
+              required
+              placeholder="Mã khối mới"
+            />
+          </label>
+        </div>
+
+        <button type="submit">Cập nhật mã khối</button>
+      </form>
+
+      {message && <p>{message}</p>}
+    </div>
+  );
+};
+
+const ChuyenNganhDetail: React.FC<{
+  maNganh: number;
+  chuyenNganhData: Record<number, ChuyenNganh[]>;
+  onBack: () => void;
+}> = ({ maNganh, chuyenNganhData, onBack }) => {
+  // State cho form cập nhật
+  const [maChuyenNganh, setMaChuyenNganh] = useState("");
+  const [tenChuyenNganh, setTenChuyenNganh] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!maChuyenNganh || !tenChuyenNganh) {
+      setMessage("Vui lòng nhập đầy đủ mã chuyên ngành và tên chuyên ngành mới");
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8000/cap-nhat-chuyen-nganh/${maChuyenNganh}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ TenChuyenNganh: tenChuyenNganh }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setMessage(`Lỗi: ${errorData.detail || "Cập nhật thất bại"}`);
+        return;
+      }
+
+      const data = await response.json();
+      setMessage(data.message || "Cập nhật thành công!");
+    } catch (error) {
+      setMessage("Lỗi khi gọi API: " + (error instanceof Error ? error.message : String(error)));
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={onBack} style={{ marginBottom: "10px" }}>
+        🔙 Quay lại danh sách ngành
+      </button>
+      <h4>Chuyên ngành của ngành {maNganh}</h4>
+
+      {chuyenNganhData[maNganh]?.length > 0 ? (
+        <table>
           <thead>
             <tr>
-              <th>Mã Khối</th>
-              <th>Môn học</th>
-              <th>Xóa</th>
+              <th>STT</th>
+              <th>Tên chuyên ngành</th>
+              <th>Mã chuyên ngành</th>
+              <th>Hành động</th>
             </tr>
           </thead>
           <tbody>
-            {khoiXetTuyenData[maNganh].map((khoi, index) => (
-              <tr key={index}>
-                <td>{khoi.MaKhoi}</td>
-                <td>
-                  <ul>
-                    {khoi.TenMon.map((mon, idx) => (
-                      <li key={idx}>{mon}</li>
-                    ))}
-                  </ul>
-                </td>
+            {chuyenNganhData[maNganh].map((chuyen, index) => (
+              <tr key={chuyen.MaChuyenNganh}>
+                <td>{index + 1}</td>
+                <td>{chuyen.TenChuyenNganh}</td>
+                <td>{chuyen.MaChuyenNganh}</td>
                 <td>
                   <button className="text-red-500">🗑 Xóa</button>
                 </td>
@@ -60,45 +228,43 @@ const KhoiXetTuyenDetail: React.FC<{
             ))}
           </tbody>
         </table>
-      </div>
-    ) : (
-      <p>⏳ Đang tải môn học hoặc không có dữ liệu...</p>
-    )}
-  </div>
-);
+      ) : (
+        <p>⏳ Đang tải chuyên ngành hoặc không có dữ liệu...</p>
+      )}
 
-const ChuyenNganhDetail: React.FC<{
-  maNganh: number;
-  chuyenNganhData: Record<number, ChuyenNganh[]>;
-  onBack: () => void;
-}> = ({ maNganh, chuyenNganhData, onBack }) => (
-  <div>
-    <button onClick={onBack} style={{ marginBottom: "10px" }}>
-      🔙 Quay lại danh sách ngành
-    </button>
-    <h4>Chuyên ngành của ngành {maNganh}</h4>
-    {chuyenNganhData[maNganh]?.length > 0 ? (
-      <table>
-        <thead>
-          <tr>
-            <th>STT</th>
-            <th>Tên chuyên ngành</th>
-          </tr>
-        </thead>
-        <tbody>
-          {chuyenNganhData[maNganh].map((chuyen, index) => (
-            <tr key={index}>
-              <td>{index + 1}</td>
-              <td>{chuyen.TenChuyenNganh}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    ) : (
-      <p>⏳ Đang tải chuyên ngành hoặc không có dữ liệu...</p>
-    )}
-  </div>
-);
+      <h3 className="font-bold text-lg mb-3">➕ Thêm / Cập nhật Chuyên Ngành</h3>
+
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>
+            Mã chuyên ngành:
+            <input
+              type="number"
+              value={maChuyenNganh}
+              onChange={(e) => setMaChuyenNganh(e.target.value)}
+              required
+
+            />
+          </label>
+        </div>
+        <div>
+          <label>
+            Tên chuyên ngành mới:
+            <input
+              type="text"
+              value={tenChuyenNganh}
+              onChange={(e) => setTenChuyenNganh(e.target.value)}
+              required
+            />
+          </label>
+        </div>
+        <button type="submit">Cập nhật</button>
+      </form>
+
+      {message && <p>{message}</p>}
+    </div>
+  );
+};
 
 const NganhHoc: React.FC = () => {
   const [nganhHocList, setNganhHocList] = useState<NganhHoc[]>([]);
@@ -229,6 +395,8 @@ const NganhHoc: React.FC = () => {
       setViewingChuyenNganh(maNganh);
     }
   };
+
+
 
   const handleStatusChange = async (maNganhHoc: number, checked: boolean) => {
     setIsProcessing(true);
