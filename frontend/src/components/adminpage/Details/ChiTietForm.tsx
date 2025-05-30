@@ -27,12 +27,6 @@ const ChiTietForm: React.FC<ChiTietProps> = ({ form, onBack }) => {
                     <tr><td><strong>Năm tốt nghiệp</strong></td><td>{form.NamTotNghiep}</td></tr>
                     <tr><td><strong>Nguyện vọng du học</strong></td><td>{duHocLabel(form.CoNguyenVongDuHoc)}</td></tr>
                     <tr><td><strong>Ngày đăng ký</strong></td><td>{form.NgayDangKy}</td></tr>
-                    <tr>
-                        <td><strong>Kết quả</strong></td>
-                        <td style={{ fontWeight: "bold", color: form.Ketqua === "1" ? "green" : "red" }}>
-                            {form.Ketqua === "1" ? "Đậu" : "Rớt"}
-                        </td>
-                    </tr>
                 </tbody>
             </table>
             <br />

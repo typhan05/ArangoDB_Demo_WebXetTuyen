@@ -482,55 +482,55 @@ def create_form(payload: FormXetTuyenRequest):
 
         aql = """
         LET newForm = {
-          MaForm: @MaForm,
-          HoTen: @HoTen,
-          GioiTinh: @GioiTinh,
-          NgaySinh: @NgaySinh,
-          CCCD: @CCCD,
-          Email: @Email,
-          SoDienThoai: @SoDienThoai,
-          DiaChi: @DiaChi,
-          NamTotNghiep: @NamTotNghiep,
-          CoNguyenVongDuHoc: @CoNguyenVongDuHoc,
-          NgayDangKy: @NgayDangKy,
-          MaTruong: @MaTruong,
-          DiemThi: @DiemThi,
-          FileHocBa: @FileHocBa
-        }
+  MaForm: @MaForm,
+  HoTen: @HoTen,
+  GioiTinh: @GioiTinh,
+  NgaySinh: @NgaySinh,
+  CCCD: @CCCD,
+  Email: @Email,
+  SoDienThoai: @SoDienThoai,
+  DiaChi: @DiaChi,
+  NamTotNghiep: @NamTotNghiep,
+  CoNguyenVongDuHoc: @CoNguyenVongDuHoc,
+  NgayDangKy: @NgayDangKy,
+  MaTruong: @MaTruong,
+  DiemThi: @DiemThi,
+  nganhHocId: @NganhHocId,
+  FileHocBa: @FileHocBa
+}
 
-        INSERT newForm INTO FormXetTuyen
-        LET inserted = NEW
+INSERT newForm INTO FormXetTuyen
+LET inserted = NEW
 
-        // Liên kết đợt xét tuyển
-        LET dot = FIRST(FOR d IN DotXetTuyen FILTER d.MaDotXetTuyen == @MaDotXetTuyen RETURN d)
-        INSERT { _from: inserted._id, _to: dot._id } INTO FormXetTuyen_DotXetTuyen
+LET truong = FIRST(FOR t IN TruongTHPT FILTER t.MaTruong == @MaTruong RETURN t)
+INSERT { _from: inserted._id, _to: truong._id } INTO FormXetTuyen_TruongTHPT
 
-        // Liên kết hình thức xét tuyển
-        LET hinhthuc = FIRST(FOR h IN HinhThucXetTuyen FILTER h.MaHinhThucXetTuyen == @MaHinhThucXetTuyen RETURN h)
-        INSERT { _from: inserted._id, _to: hinhthuc._id } INTO FormXetTuyen_HinhThucXetTuyen
+LET dot = FIRST(FOR d IN DotXetTuyen FILTER d.MaDotXetTuyen == @MaDotXetTuyen RETURN d)
+INSERT { _from: inserted._id, _to: dot._id } INTO FormXetTuyen_DotXetTuyen
 
-        // Phân biệt: chuyên ngành hay ngành học
-        LET isChuyenNganh = LIKE(@NganhHocId, "ChuyenNganh/%")
-        LET isNganhHoc = LIKE(@NganhHocId, "NganhHoc/%")
+LET hinhthuc = FIRST(FOR h IN HinhThucXetTuyen FILTER h.MaHinhThucXetTuyen == @MaHinhThucXetTuyen RETURN h)
+INSERT { _from: inserted._id, _to: hinhthuc._id } INTO FormXetTuyen_HinhThucXetTuyen
 
-        LET temp1 = (
-            FOR i IN 1..1
-                FILTER isChuyenNganh
-                INSERT { _from: inserted._id, _to: @NganhHocId } INTO FormXetTuyen_ChuyenNganh
-                RETURN 1
-        )
-        
-        LET temp2 = (
-            FOR i IN 1..1
-                FILTER isNganhHoc
-                INSERT { _from: inserted._id, _to: @NganhHocId } INTO FormXetTuyen_NganhHoc
-                RETURN 1
-        )
+LET isChuyenNganh = LIKE(@NganhHocId, "ChuyenNganh/%")
+LET isNganhHoc = LIKE(@NganhHocId, "NganhHoc/%")
 
-        // Khối xét tuyển
-        INSERT { _from: inserted._id, _to: @KhoiId } INTO FormXetTuyen_KhoiXetTuyen
+LET temp1 = (
+    FOR i IN 1..1
+        FILTER isChuyenNganh
+        INSERT { _from: inserted._id, _to: @NganhHocId } INTO FormXetTuyen_ChuyenNganh
+        RETURN 1
+)
 
-        RETURN inserted
+LET temp2 = (
+    FOR i IN 1..1
+        FILTER isNganhHoc
+        INSERT { _from: inserted._id, _to: @NganhHocId } INTO FormXetTuyen_NganhHoc
+        RETURN 1
+)
+
+INSERT { _from: inserted._id, _to: @KhoiId } INTO FormXetTuyen_KhoiXetTuyen
+
+RETURN inserted
         """
 
         bind_vars = {
@@ -803,44 +803,45 @@ def create_nganh_hoc(payload: NganhHocRequest):
 
 #create chuyên nghành theo nghành học
 @app.post("/api/nganh-hoc/{ma_nganh_hoc}/create-chuyen-nganh")
-def create_chuyen_nganh_for_nganh(ma_nganh_hoc: str, payload: CreateChuyenNganhRequest):
+def create_chuyen_nganh_for_nganh(ma_nganh_hoc: int, payload: CreateChuyenNganhRequest):
     try:
         aql = """
-        LET existing = (
-          FOR c IN ChuyenNganh
-            FILTER c.MaChuyenNganh == @ma_chuyen_nganh
-            RETURN c
-        )
-        FILTER LENGTH(existing) == 0
+LET nganhHoc = FIRST(
+  FOR n IN NganhHoc
+    FILTER n.MaNganhHoc == @ma_nganh_hoc
+    RETURN n
+)
 
-        LET nganhHoc = FIRST(
-          FOR n IN NganhHoc
-            FILTER n.MaNganhHoc == @ma_nganh_hoc
-            RETURN n
-        )
-        FILTER nganhHoc != NULL
+LET existing = LENGTH(
+  FOR c IN ChuyenNganh
+    FILTER c.MaChuyenNganh == @ma_chuyen_nganh
+    RETURN 1
+)
 
-        LET newChuyenNganh = (
-          INSERT {
-            MaChuyenNganh: @ma_chuyen_nganh,
-            TenChuyenNganh: @ten_chuyen_nganh
-          } INTO ChuyenNganh
-          RETURN NEW
-        )[0]
+FILTER nganhHoc != NULL
+FILTER existing == 0
 
-        INSERT {
-          _from: newChuyenNganh._id,
-          _to: nganhHoc._id
-        } INTO ChuyenNganh_NganhHoc
+LET newChuyenNganh = FIRST(
+  INSERT {
+    MaChuyenNganh: @ma_chuyen_nganh,
+    TenChuyenNganh: @ten_chuyen_nganh
+  } INTO ChuyenNganh
+  RETURN NEW
+)
 
-        RETURN {
-          chuyen_nganh: newChuyenNganh,
-          edge: {
-            _from: newChuyenNganh._id,
-            _to: nganhHoc._id
-          }
-        }
-        """
+INSERT {
+  _from: newChuyenNganh._id,
+  _to: nganhHoc._id
+} INTO ChuyenNganh_NganhHoc
+
+RETURN {
+  chuyen_nganh: newChuyenNganh,
+  edge: {
+    _from: newChuyenNganh._id,
+    _to: nganhHoc._id
+  }
+}
+"""
 
         bind_vars = {
             "ma_chuyen_nganh": payload.MaChuyenNganh,

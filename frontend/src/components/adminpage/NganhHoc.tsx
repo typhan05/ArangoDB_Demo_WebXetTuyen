@@ -162,11 +162,12 @@ const ChuyenNganhDetail: React.FC<{
   maNganh: number;
   chuyenNganhData: Record<number, ChuyenNganh[]>;
   onBack: () => void;
-}> = ({ maNganh, chuyenNganhData, onBack }) => {
-  // State cho form cập nhật
+  onReload: () => void;
+}> = ({ maNganh, chuyenNganhData, onBack, onReload }) => {
   const [maChuyenNganh, setMaChuyenNganh] = useState("");
   const [tenChuyenNganh, setTenChuyenNganh] = useState("");
   const [message, setMessage] = useState("");
+  const [isAdding, setIsAdding] = useState(false); // trạng thái Thêm mới hay Cập nhật
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -177,22 +178,37 @@ const ChuyenNganhDetail: React.FC<{
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/cap-nhat-chuyen-nganh/${maChuyenNganh}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ TenChuyenNganh: tenChuyenNganh }),
-      });
+      let response;
+      if (isAdding) {
+        // Gửi POST tạo mới chuyên ngành theo ngành học
+        response = await fetch(`http://localhost:8000/api/nganh-hoc/${maNganh}/create-chuyen-nganh`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            MaChuyenNganh: Number(maChuyenNganh),
+            TenChuyenNganh: tenChuyenNganh,
+          }),
+        });
+      } else {
+        // Gửi PUT cập nhật chuyên ngành
+        response = await fetch(`http://localhost:8000/cap-nhat-chuyen-nganh/${maChuyenNganh}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ TenChuyenNganh: tenChuyenNganh }),
+        });
+      }
 
       if (!response.ok) {
         const errorData = await response.json();
-        setMessage(`Lỗi: ${errorData.detail || "Cập nhật thất bại"}`);
+        setMessage(`Lỗi: ${errorData.detail || errorData.error || "Thao tác thất bại"}`);
         return;
       }
 
       const data = await response.json();
-      setMessage(data.message || "Cập nhật thành công!");
+      setMessage(data.message || "Thao tác thành công!");
+      onReload();
+      // Có thể thêm code để refresh dữ liệu chuyên ngành nếu cần
+
     } catch (error) {
       setMessage("Lỗi khi gọi API: " + (error instanceof Error ? error.message : String(error)));
     }
@@ -243,7 +259,6 @@ const ChuyenNganhDetail: React.FC<{
               value={maChuyenNganh}
               onChange={(e) => setMaChuyenNganh(e.target.value)}
               required
-
             />
           </label>
         </div>
@@ -258,13 +273,36 @@ const ChuyenNganhDetail: React.FC<{
             />
           </label>
         </div>
-        <button type="submit">Cập nhật</button>
+
+        <div style={{ margin: "10px 0" }}>
+          <label>
+            <input
+              type="radio"
+              name="actionType"
+              checked={isAdding}
+              onChange={() => setIsAdding(true)}
+            />{" "}
+            Thêm mới chuyên ngành
+          </label>{" "}
+          <label>
+            <input
+              type="radio"
+              name="actionType"
+              checked={!isAdding}
+              onChange={() => setIsAdding(false)}
+            />{" "}
+            Cập nhật chuyên ngành
+          </label>
+        </div>
+
+        <button type="submit">{isAdding ? "Thêm chuyên ngành" : "Cập nhật chuyên ngành"}</button>
       </form>
 
       {message && <p>{message}</p>}
     </div>
   );
 };
+
 
 const NganhHoc: React.FC = () => {
   const [nganhHocList, setNganhHocList] = useState<NganhHoc[]>([]);
@@ -360,8 +398,9 @@ const NganhHoc: React.FC = () => {
     }
   };
 
-  const loadChuyenNganh = async (maNganh: number) => {
-    if (chuyenNganhData[maNganh]) {
+  const loadChuyenNganh = async (maNganh: number, forceReload = false) => {
+    // Nếu đã có dữ liệu và không yêu cầu reload lại thì trả về luôn
+    if (!forceReload && chuyenNganhData[maNganh]) {
       setViewingChuyenNganh(maNganh);
       return;
     }
@@ -395,6 +434,13 @@ const NganhHoc: React.FC = () => {
       setViewingChuyenNganh(maNganh);
     }
   };
+
+  const handleReload = () => {
+    if (viewingChuyenNganh !== null) {
+      loadChuyenNganh(viewingChuyenNganh, true); // Gọi với forceReload=true để tải lại dữ liệu
+    }
+  };
+
 
 
 
@@ -590,6 +636,7 @@ const NganhHoc: React.FC = () => {
           maNganh={viewingChuyenNganh}
           chuyenNganhData={chuyenNganhData}
           onBack={() => setViewingChuyenNganh(null)}
+          onReload={handleReload}
         />
       ) : (
         <>

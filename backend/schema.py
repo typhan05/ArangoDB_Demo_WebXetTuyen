@@ -51,7 +51,8 @@ class FormXetTuyenRequest(BaseModel):
     duHoc: bool
     maDotXetTuyen: str
     maHinhThucXetTuyen: str
-    nganhHoc: str
+    nganhHocId: str       #
+    fileUrl: str            #
 class Tinh(BaseModel):
     MaTinh: str
     TenTinh: str
