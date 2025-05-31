@@ -264,8 +264,16 @@ const TinhTp = () => {
       {/* Hiển thị bảng trường THPT khi tỉnh đã được chọn */}
       {selectedTinh && selectedTinhName && (
         <div>
-          <h3>Danh sách Trường THPT tại {selectedTinhName}</h3>
-          <button onClick={() => setSelectedTinh(null)}>Quay lại</button>
+          <h3 className="mb-2 font-semibold">
+            Danh sách Trường THPT tại {selectedTinhName}
+          </h3>
+          <Button
+            onClick={() => setSelectedTinh(null)}
+            variant="outline"
+            className="mb-2"
+          >
+            Quay lại
+          </Button>
 
           {truongData.length > 0 ? (
             <div className="overflow-auto max-w-full max-h-[65vh]">
@@ -284,12 +292,18 @@ const TinhTp = () => {
                       <td>{index + 1}</td>
                       <td>{truong.TenTruong}</td>
                       <td>
-                        <button onClick={() => handleEditTruong(truong)}>
+                        <button
+                          onClick={() => handleEditTruong(truong)}
+                          className="text-blue-600 underline"
+                        >
                           Sửa
                         </button>
                       </td>
                       <td>
-                        <button onClick={() => handleDeleteTruong(truong._id)}>
+                        <button
+                          onClick={() => handleDeleteTruong(truong._id)}
+                          className="text-red-600 underline"
+                        >
                           Xóa
                         </button>
                       </td>

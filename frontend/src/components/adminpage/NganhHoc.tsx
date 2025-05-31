@@ -11,6 +11,7 @@ interface NganhHoc {
   DiemHocBa?: number;
   DiemDGNL?: number;
   TrangThai: number;
+  ChuyenNganh?: boolean;
 }
 
 interface KhoiXetTuyen {
@@ -29,8 +30,8 @@ const KhoiXetTuyenDetail: React.FC<{
   khoiXetTuyenData: Record<number, KhoiXetTuyen[]>;
   onBack: () => void;
 }> = ({ maNganh, khoiXetTuyenData, onBack }) => {
-  const [maKhoiCu, setMaKhoiCu] = useState("");       // Mã khối cũ muốn đổi
-  const [maKhoiMoi, setMaKhoiMoi] = useState("");     // Mã khối mới nhập vào
+  const [maKhoiCu, setMaKhoiCu] = useState(""); // Mã khối cũ muốn đổi
+  const [maKhoiMoi, setMaKhoiMoi] = useState(""); // Mã khối mới nhập vào
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -63,7 +64,8 @@ const KhoiXetTuyenDetail: React.FC<{
       setMessage(data.message || "Cập nhật thành công!");
     } catch (error) {
       setMessage(
-        "Lỗi khi gọi API: " + (error instanceof Error ? error.message : String(error))
+        "Lỗi khi gọi API: " +
+          (error instanceof Error ? error.message : String(error))
       );
     }
   };
@@ -74,10 +76,13 @@ const KhoiXetTuyenDetail: React.FC<{
         🔙 Quay lại danh sách ngành
       </button>
 
-      <h4>Khối xét tuyển của ngành {maNganh}</h4>
+      <h4>
+        Khối xét tuyển của ngành{" "}
+        <span className="text-blue-600 font-bold">{maNganh}</span>
+      </h4>
 
       {khoiXetTuyenData[maNganh]?.length > 0 ? (
-        <div className="overflow-auto max-w-full max-h-[80vh]">
+        <div className="overflow-auto max-w-full max-h-[48vh]">
           <table className="w-full">
             <thead>
               <tr>
@@ -121,37 +126,48 @@ const KhoiXetTuyenDetail: React.FC<{
       ) : (
         <p>⏳ Đang tải môn học hoặc không có dữ liệu...</p>
       )}
+      <div className="shadow-md rounded-2xl px-5 py-4 bg-white">
+        <h3 className="font-bold text-lg mb-3">
+          ➕ Cập nhật Mã Khối Xét Tuyển
+        </h3>
 
-      <h3 className="font-bold text-lg mb-3">➕ Cập nhật Mã Khối Xét Tuyển</h3>
+        <form onSubmit={handleSubmit}>
+          <div className="flex gap-4 mb-4">
+            <div>
+              <label className="block mb-1">
+                Mã khối cũ (chọn ở trên hoặc nhập lại):
+              </label>
+              <input
+                className="border rounded-md px-2 py-1"
+                type="text"
+                value={maKhoiCu}
+                onChange={(e) => setMaKhoiCu(e.target.value)}
+                required
+                placeholder="Mã khối cũ"
+              />
+            </div>
+            <div>
+              <label className="block mb-1">Mã khối mới:</label>
+              <input
+                className="border rounded-md px-2 py-1"
+                type="text"
+                value={maKhoiMoi}
+                onChange={(e) => setMaKhoiMoi(e.target.value)}
+                required
+                placeholder="Mã khối mới"
+              />
+            </div>
+          </div>
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>
-            Mã khối cũ (chọn ở trên hoặc nhập lại):
-            <input
-              type="text"
-              value={maKhoiCu}
-              onChange={(e) => setMaKhoiCu(e.target.value)}
-              required
-              placeholder="Mã khối cũ"
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Mã khối mới:
-            <input
-              type="text"
-              value={maKhoiMoi}
-              onChange={(e) => setMaKhoiMoi(e.target.value)}
-              required
-              placeholder="Mã khối mới"
-            />
-          </label>
-        </div>
-
-        <button type="submit">Cập nhật mã khối</button>
-      </form>
+          <Button
+            type="submit"
+            variant="secondary"
+            className="bg-blue-500 hover:bg-blue-800 text-white"
+          >
+            Cập nhật mã khối
+          </Button>
+        </form>
+      </div>
 
       {message && <p>{message}</p>}
     </div>
@@ -167,13 +183,15 @@ const ChuyenNganhDetail: React.FC<{
   const [maChuyenNganh, setMaChuyenNganh] = useState("");
   const [tenChuyenNganh, setTenChuyenNganh] = useState("");
   const [message, setMessage] = useState("");
-  const [isAdding, setIsAdding] = useState(false); // trạng thái Thêm mới hay Cập nhật
+  const [isAdding, setIsAdding] = useState(true); // trạng thái Thêm mới hay Cập nhật
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!maChuyenNganh || !tenChuyenNganh) {
-      setMessage("Vui lòng nhập đầy đủ mã chuyên ngành và tên chuyên ngành mới");
+      setMessage(
+        "Vui lòng nhập đầy đủ mã chuyên ngành và tên chuyên ngành mới"
+      );
       return;
     }
 
@@ -181,45 +199,61 @@ const ChuyenNganhDetail: React.FC<{
       let response;
       if (isAdding) {
         // Gửi POST tạo mới chuyên ngành theo ngành học
-        response = await fetch(`http://localhost:8000/api/nganh-hoc/${maNganh}/create-chuyen-nganh`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            MaChuyenNganh: Number(maChuyenNganh),
-            TenChuyenNganh: tenChuyenNganh,
-          }),
-        });
+        response = await fetch(
+          `http://localhost:8000/api/nganh-hoc/${maNganh}/create-chuyen-nganh`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              MaChuyenNganh: Number(maChuyenNganh),
+              TenChuyenNganh: tenChuyenNganh,
+            }),
+          }
+        );
       } else {
         // Gửi PUT cập nhật chuyên ngành
-        response = await fetch(`http://localhost:8000/cap-nhat-chuyen-nganh/${maChuyenNganh}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ TenChuyenNganh: tenChuyenNganh }),
-        });
+        response = await fetch(
+          `http://localhost:8000/cap-nhat-chuyen-nganh/${maChuyenNganh}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ TenChuyenNganh: tenChuyenNganh }),
+          }
+        );
       }
 
       if (!response.ok) {
         const errorData = await response.json();
-        setMessage(`Lỗi: ${errorData.detail || errorData.error || "Thao tác thất bại"}`);
+        setMessage(
+          `Lỗi: ${errorData.detail || errorData.error || "Thao tác thất bại"}`
+        );
         return;
       }
 
       const data = await response.json();
       setMessage(data.message || "Thao tác thành công!");
+      setMaChuyenNganh("");
+      setTenChuyenNganh("");
       onReload();
       // Có thể thêm code để refresh dữ liệu chuyên ngành nếu cần
-
     } catch (error) {
-      setMessage("Lỗi khi gọi API: " + (error instanceof Error ? error.message : String(error)));
+      setMessage(
+        "Lỗi khi gọi API: " +
+          (error instanceof Error ? error.message : String(error))
+      );
     }
   };
 
   return (
     <div>
-      <button onClick={onBack} style={{ marginBottom: "10px" }}>
+      <Button
+        onClick={onBack}
+        style={{ marginBottom: "10px" }}
+        variant="outline"
+      >
         🔙 Quay lại danh sách ngành
-      </button>
-      <h4>Chuyên ngành của ngành {maNganh}</h4>
+      </Button>
+      <h4 className="font-bold">Chuyên ngành của ngành {maNganh}</h4>
 
       {chuyenNganhData[maNganh]?.length > 0 ? (
         <table>
@@ -238,71 +272,84 @@ const ChuyenNganhDetail: React.FC<{
                 <td>{chuyen.TenChuyenNganh}</td>
                 <td>{chuyen.MaChuyenNganh}</td>
                 <td>
-                  <button className="text-red-500">🗑 Xóa</button>
+                  <button className="text-red-500" type="button">
+                    🗑 Xóa
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       ) : (
-        <p>⏳ Đang tải chuyên ngành hoặc không có dữ liệu...</p>
+        <p className="my-10 p-4 border">
+          ⏳ Đang tải chuyên ngành hoặc không có dữ liệu...
+        </p>
       )}
 
-      <h3 className="font-bold text-lg mb-3">➕ Thêm / Cập nhật Chuyên Ngành</h3>
+      <div className="shadow-md rounded-2xl px-5 py-4 bg-white">
+        <h3 className="font-bold text-lg mb-3">
+          ➕ Thêm / Cập nhật Chuyên Ngành
+        </h3>
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>
-            Mã chuyên ngành:
-            <input
-              type="number"
-              value={maChuyenNganh}
-              onChange={(e) => setMaChuyenNganh(e.target.value)}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Tên chuyên ngành mới:
-            <input
-              type="text"
-              value={tenChuyenNganh}
-              onChange={(e) => setTenChuyenNganh(e.target.value)}
-              required
-            />
-          </label>
-        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="flex gap-4 mb-4">
+            <div>
+              <label className="block mb-1">Mã chuyên ngành:</label>
+              <input
+                className="border rounded-md px-2 py-1"
+                type="number"
+                value={maChuyenNganh}
+                onChange={(e) => setMaChuyenNganh(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="block mb-1">Tên chuyên ngành:</label>
+              <input
+                className="border rounded-md px-2 py-1"
+                type="text"
+                value={tenChuyenNganh}
+                onChange={(e) => setTenChuyenNganh(e.target.value)}
+                required
+              />
+            </div>
+          </div>
 
-        <div style={{ margin: "10px 0" }}>
-          <label>
-            <input
-              type="radio"
-              name="actionType"
-              checked={isAdding}
-              onChange={() => setIsAdding(true)}
-            />{" "}
-            Thêm mới chuyên ngành
-          </label>{" "}
-          <label>
-            <input
-              type="radio"
-              name="actionType"
-              checked={!isAdding}
-              onChange={() => setIsAdding(false)}
-            />{" "}
-            Cập nhật chuyên ngành
-          </label>
-        </div>
+          <div className="flex gap-4 mb-6">
+            <label>
+              <input
+                type="radio"
+                name="actionType"
+                checked={isAdding}
+                onChange={() => setIsAdding(true)}
+              />{" "}
+              Thêm mới chuyên ngành
+            </label>{" "}
+            <label>
+              <input
+                type="radio"
+                name="actionType"
+                checked={!isAdding}
+                onChange={() => setIsAdding(false)}
+              />{" "}
+              Cập nhật chuyên ngành
+            </label>
+          </div>
 
-        <button type="submit">{isAdding ? "Thêm chuyên ngành" : "Cập nhật chuyên ngành"}</button>
-      </form>
+          <Button
+            type="submit"
+            variant="secondary"
+            className="bg-blue-500 hover:bg-blue-800 text-white"
+          >
+            {isAdding ? "Thêm chuyên ngành" : "Cập nhật chuyên ngành"}
+          </Button>
+        </form>
+      </div>
 
-      {message && <p>{message}</p>}
+      {message && <p className="mt-4 text-green-800">{message}</p>}
     </div>
   );
 };
-
 
 const NganhHoc: React.FC = () => {
   const [nganhHocList, setNganhHocList] = useState<NganhHoc[]>([]);
@@ -320,6 +367,11 @@ const NganhHoc: React.FC = () => {
   const [viewingChuyenNganh, setViewingChuyenNganh] = useState<number | null>(
     null
   );
+  const [newNganh, setNewNganh] = useState({
+    MaNganhHoc: "",
+    TenNganhHoc: "",
+    DiemDau: "",
+  });
   const [editMode, setEditMode] = useState<{
     isEditing: boolean;
     editedNganh?: NganhHoc;
@@ -441,9 +493,6 @@ const NganhHoc: React.FC = () => {
     }
   };
 
-
-
-
   const handleStatusChange = async (maNganhHoc: number, checked: boolean) => {
     setIsProcessing(true);
     try {
@@ -532,6 +581,7 @@ const NganhHoc: React.FC = () => {
 
       alert(resData.message || "Cập nhật thành công!");
       setEditMode({ isEditing: false });
+      fetchData();
       // Có thể gọi lại API lấy danh sách mới hoặc cập nhật state danh sách ở đây
     } catch (err) {
       console.error("Error:", err);
@@ -565,18 +615,14 @@ const NganhHoc: React.FC = () => {
       }
     }
   };
+
   const handleAddNganh = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const form = e.target as HTMLFormElement;
-    const newNganh = {
-      MaNganhHoc: (form.elements.namedItem("MaNganhHoc") as HTMLInputElement)
-        .value,
-      TenNganhHoc: (form.elements.namedItem("TenNganhHoc") as HTMLInputElement)
-        .value,
-      DiemDau: (form.elements.namedItem("DiemDau") as HTMLInputElement).value,
-      MaBacHoc: 1, // Assuming 1 as the default value for MaBacHoc (degree level)
-      TrangThai: 1, // Default active status
+    const nganhToSubmit = {
+      ...newNganh,
+      MaBacHoc: 1, // Hoặc tùy chỉnh từ props/state
+      TrangThai: 1,
     };
 
     try {
@@ -585,7 +631,7 @@ const NganhHoc: React.FC = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(newNganh),
+        body: JSON.stringify(nganhToSubmit),
       });
 
       if (!response.ok) {
@@ -594,6 +640,7 @@ const NganhHoc: React.FC = () => {
       }
 
       fetchData(); // Re-fetch the data to update the list
+      setNewNganh({ MaNganhHoc: "", TenNganhHoc: "", DiemDau: "" });
     } catch (error) {
       console.error("Lỗi:", error);
       if (error instanceof Error) {
@@ -618,6 +665,7 @@ const NganhHoc: React.FC = () => {
 
   // Add this function before the return statement
   const handleEdit = (nganh: NganhHoc) => {
+    console.log(nganh);
     setEditMode({ isEditing: true, editedNganh: nganh });
   };
 
@@ -658,65 +706,76 @@ const NganhHoc: React.FC = () => {
           ) : error ? (
             <p style={{ color: "red" }}>{error}</p>
           ) : (
-            <div className="overflow-auto max-w-full max-h-[65vh]">
+            <div className="overflow-auto max-w-full max-h-[50vh]">
               <table className="w-full">
+                <colgroup>
+                  <col className="w-[15%]" />
+                  <col className="w-[35%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[30%]" />
+                </colgroup>
                 <thead>
                   <tr>
                     <th>Mã Ngành</th>
                     <th>Tên Ngành</th>
-                    <th>Điểm ĐGNL</th>
-                    <th>Điểm THPTQG</th>
+                    {/* <th>Điểm ĐGNL</th>
+                    <th>Điểm THPTQG</th> */}
                     <th>Điểm Học Bạ</th>
                     <th>Trạng Thái</th>
                     <th>Hành động</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredList.map((nganh) => (
-                    <tr key={nganh.MaNganhHoc}>
-                      <td>{nganh.MaNganhHoc}</td>
-                      <td>{nganh.TenNganhHoc}</td>
-                      <td>{nganh.DiemDGNL ?? "—"}</td>
-                      <td>{nganh.DiemDau}</td>
-                      <td>{nganh.DiemDau}</td>
+                  {filteredList
+                    .slice()
+                    .reverse()
+                    .map((nganh) => (
+                      <tr key={nganh.MaNganhHoc}>
+                        <td>{nganh.MaNganhHoc}</td>
+                        <td>{nganh.TenNganhHoc}</td>
+                        {/* <td>{nganh.DiemDGNL ?? "—"}</td>
+                      <td>{nganh.DiemDau}</td> */}
+                        <td>{nganh.DiemDau}</td>
 
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={nganh.TrangThai === 1}
-                          disabled={isProcessing}
-                          onChange={(e) =>
-                            handleStatusChange(
-                              nganh.MaNganhHoc,
-                              e.target.checked
-                            )
-                          }
-                        />
-                      </td>
-                      <td>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => loadKhoiXetTuyen(nganh.MaNganhHoc)}
-                          >
-                            📘 Khối
-                          </button>
-                          <button
-                            onClick={() => loadChuyenNganh(nganh.MaNganhHoc)}
-                          >
-                            🧭 Chuyên ngành
-                          </button>
-                          <button onClick={() => handleEdit(nganh)}>
-                            ✏️ Sửa
-                          </button>
-                          <button
-                            onClick={() => handleDelete(nganh.MaNganhHoc)}
-                          >
-                            🗑 Xóa
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                        <td>
+                          <input
+                            type="checkbox"
+                            checked={nganh.TrangThai === 1}
+                            disabled={isProcessing}
+                            onChange={(e) =>
+                              handleStatusChange(
+                                nganh.MaNganhHoc,
+                                e.target.checked
+                              )
+                            }
+                          />
+                        </td>
+
+                        <td>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => loadKhoiXetTuyen(nganh.MaNganhHoc)}
+                            >
+                              📘 Khối
+                            </button>
+                            <button
+                              onClick={() => loadChuyenNganh(nganh.MaNganhHoc)}
+                            >
+                              🧭 Chuyên ngành
+                            </button>
+                            <button onClick={() => handleEdit(nganh)}>
+                              ✏️ Sửa
+                            </button>
+                            <button
+                              onClick={() => handleDelete(nganh.MaNganhHoc)}
+                            >
+                              🗑 Xóa
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
@@ -728,7 +787,7 @@ const NganhHoc: React.FC = () => {
               className="edit-form absolute bottom-0 -left-5 right-0 shadow-md rounded-2xl px-5 py-4 bg-white"
             >
               <h3 className="font-bold text-lg mb-3">📝 Chỉnh sửa Ngành học</h3>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <input
                   className="border rounded-md px-2 py-1"
                   type="text"
@@ -752,7 +811,7 @@ const NganhHoc: React.FC = () => {
                   onChange={handleInputChange}
                   placeholder="Điểm đầu"
                 />
-                <input
+                {/* <input
                   className="border rounded-md px-2 py-1"
                   type="number"
                   name="DiemTHPTQG"
@@ -767,14 +826,21 @@ const NganhHoc: React.FC = () => {
                   value={editedNganh.DiemDGNL ?? ""}
                   onChange={handleInputChange}
                   placeholder="Điểm ĐGNL"
-                />
+                /> */}
                 <Button type="submit" variant="outline">
                   💾 Lưu
                 </Button>
                 <Button
                   type="submit"
                   variant="outline"
-                  onClick={() => setEditMode({ isEditing: false })}
+                  onClick={() => {
+                    setEditMode({ isEditing: false });
+                    setNewNganh({
+                      MaNganhHoc: "",
+                      TenNganhHoc: "",
+                      DiemDau: "",
+                    });
+                  }}
                 >
                   ❌ Hủy
                 </Button>
@@ -790,23 +856,38 @@ const NganhHoc: React.FC = () => {
                 <input
                   type="text"
                   name="MaNganhHoc"
+                  maxLength={7}
                   className="border rounded-md px-2 py-1"
                   placeholder="Mã ngành học"
                   required
+                  value={newNganh.MaNganhHoc}
+                  onChange={(e) =>
+                    setNewNganh({ ...newNganh, MaNganhHoc: e.target.value })
+                  }
                 />
+
                 <input
                   type="text"
                   name="TenNganhHoc"
                   className="border rounded-md px-2 py-1"
                   placeholder="Tên ngành học"
                   required
+                  value={newNganh.TenNganhHoc}
+                  onChange={(e) =>
+                    setNewNganh({ ...newNganh, TenNganhHoc: e.target.value })
+                  }
                 />
+
                 <input
                   type="number"
                   name="DiemDau"
                   className="border rounded-md px-2 py-1"
                   placeholder="Điểm đầu"
                   required
+                  value={newNganh.DiemDau}
+                  onChange={(e) =>
+                    setNewNganh({ ...newNganh, DiemDau: e.target.value })
+                  }
                 />
                 <Button type="submit" className="bg-blue-600 hover:bg-blue-800">
                   Thêm ngành

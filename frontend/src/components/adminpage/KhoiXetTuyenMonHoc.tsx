@@ -30,7 +30,6 @@ const KhoiXetTuyenMonHoc = () => {
   const [newMaMonHoc, setNewMaMonHoc] = useState("");
   const [newTenMonHoc, setNewTenMonHoc] = useState("");
 
-
   const fetchData = async () => {
     try {
       const res = await fetch("http://127.0.0.1:8000/danh-sach-mon-hoc");
@@ -95,7 +94,6 @@ const KhoiXetTuyenMonHoc = () => {
     }
   };
 
-
   const handleDeleteKhoi = async (maKhoi: string) => {
     try {
       await fetch("http://127.0.0.1:8000/khoixettuyen/delete", {
@@ -111,7 +109,6 @@ const KhoiXetTuyenMonHoc = () => {
     }
   };
 
-
   const handleAddMonHoc = async (maKhoi: string, newTenMonHoc: string) => {
     if (!newMaMonHoc.trim() || !newTenMonHoc.trim()) return;
     try {
@@ -119,8 +116,8 @@ const KhoiXetTuyenMonHoc = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          maKhoi,       // mã khối
-          tenMonHoc: newTenMonHoc // tên môn học
+          maKhoi, // mã khối
+          tenMonHoc: newTenMonHoc, // tên môn học
         }),
       });
       // Clear input sau khi thêm
@@ -132,7 +129,6 @@ const KhoiXetTuyenMonHoc = () => {
     }
   };
 
-
   const handleEditMonHoc = async (maKhoi: string, oldTenMon: string) => {
     try {
       await fetch("http://127.0.0.1:8000/mon-hoc/update-by-name", {
@@ -141,7 +137,7 @@ const KhoiXetTuyenMonHoc = () => {
         body: JSON.stringify({
           maKhoi: maKhoi,
           tenMonHocCu: oldTenMon,
-          tenMonHocMoi: editedTenMon
+          tenMonHocMoi: editedTenMon,
         }),
       });
       setEditingMonId(null);
@@ -194,114 +190,137 @@ const KhoiXetTuyenMonHoc = () => {
             value={searchTerm}
             onChange={handleSearchChange}
             disabled={!!showDetails}
-            className={`mb-4 w-full p-2 border rounded ${showDetails ? "bg-gray-200" : "bg-white"}`}
+            className={`mb-4 w-full p-2 border rounded ${
+              showDetails ? "bg-gray-200" : "bg-white"
+            }`}
           />
 
           {showDetails && (
-            <button className="mb-4 px-3 py-1 bg-gray-300 rounded" onClick={goBack}>
+            <button
+              className="mb-4 px-3 py-1 bg-gray-300 rounded"
+              onClick={goBack}
+            >
               Quay lại
             </button>
           )}
 
-          <table className="table-auto w-full text-sm text-center border border-gray-300">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-2 border">Mã Khối</th>
-                <th className="p-2 border">Môn Học</th>
-                <th className="p-2 border">Hành Động</th>
-              </tr>
-            </thead>
-            <tbody>
-              {displayedData.map((item) => (
-                <React.Fragment key={item.maKhoi}>
-                  {showDetails === item.maKhoi ? (
-                    <>
+          <div className="overflow-auto max-w-full max-h-[60vh]">
+            <table className="w-full">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="p-2 border">Mã Khối</th>
+                  <th className="p-2 border">Môn Học</th>
+                  <th className="p-2 border">Hành Động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayedData.map((item) => (
+                  <React.Fragment key={item.maKhoi}>
+                    {showDetails === item.maKhoi ? (
+                      <>
+                        <tr>
+                          <td colSpan={3} className="p-2 border">
+                            <input
+                              placeholder="Tên môn mới..."
+                              value={newMaMonHoc}
+                              onChange={(e) => setNewMaMonHoc(e.target.value)}
+                              className="p-1 border rounded mr-2"
+                            />
+                            <button
+                              className="bg-blue-500 text-white px-2 py-1 rounded"
+                              onClick={() =>
+                                handleAddMonHoc(item.maKhoi, newMaMonHoc)
+                              }
+                            >
+                              Thêm môn
+                            </button>
+                          </td>
+                        </tr>
+                        {item.cacMonHoc.map((monHoc) => (
+                          <tr key={monHoc.id}>
+                            <td className="border p-1">{item.maKhoi}</td>
+                            <td className="border p-1">
+                              {editingMonId === monHoc.id ? (
+                                <input
+                                  value={editedTenMon}
+                                  onChange={(e) =>
+                                    setEditedTenMon(e.target.value)
+                                  }
+                                  className="p-1 border rounded"
+                                />
+                              ) : (
+                                monHoc.tenMon
+                              )}
+                            </td>
+                            <td className="border p-1">
+                              {editingMonId === monHoc.id ? (
+                                <>
+                                  <button
+                                    className="text-green-600 mr-2"
+                                    onClick={() =>
+                                      handleEditMonHoc(
+                                        item.maKhoi,
+                                        monHoc.tenMon
+                                      )
+                                    }
+                                  >
+                                    Lưu
+                                  </button>
+                                  <button onClick={() => setEditingMonId(null)}>
+                                    Hủy
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    className="text-blue-600 mr-2"
+                                    onClick={() => {
+                                      setEditingMonId(monHoc.id);
+                                      setEditedTenMon(monHoc.tenMon);
+                                    }}
+                                  >
+                                    Sửa
+                                  </button>
+                                  <button
+                                    className="text-red-600"
+                                    onClick={() =>
+                                      handleDeleteMonHoc(
+                                        item.maKhoi,
+                                        monHoc.tenMon
+                                      )
+                                    }
+                                  >
+                                    Xóa
+                                  </button>
+                                </>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </>
+                    ) : (
                       <tr>
-                        <td colSpan={3} className="p-2 border">
-                          <input
-                            placeholder="Tên môn mới..."
-                            value={newMaMonHoc}
-                            onChange={(e) => setNewMaMonHoc(e.target.value)}
-                            className="p-1 border rounded mr-2"
-                          />
+                        <td className="border p-1">{item.maKhoi}</td>
+                        <td className="border p-1">
+                          {item.cacMonHoc.map((monHoc) => (
+                            <div key={monHoc.id}>{monHoc.tenMon}</div>
+                          ))}
+                        </td>
+                        <td className="border p-1">
                           <button
-                            className="bg-blue-500 text-white px-2 py-1 rounded"
-                            onClick={() => handleAddMonHoc(item.maKhoi, newMaMonHoc)}
+                            className="text-blue-500 underline"
+                            onClick={() => toggleRow(item.maKhoi)}
                           >
-                            Thêm môn
+                            Xem Chi Tiết
                           </button>
                         </td>
                       </tr>
-                      {item.cacMonHoc.map((monHoc) => (
-                        <tr key={monHoc.id}>
-                          <td className="border p-1">{item.maKhoi}</td>
-                          <td className="border p-1">
-                            {editingMonId === monHoc.id ? (
-                              <input
-                                value={editedTenMon}
-                                onChange={(e) => setEditedTenMon(e.target.value)}
-                                className="p-1 border rounded"
-                              />
-                            ) : (
-                              monHoc.tenMon
-                            )}
-                          </td>
-                          <td className="border p-1">
-                            {editingMonId === monHoc.id ? (
-                              <>
-                                <button
-                                  className="text-green-600 mr-2"
-                                  onClick={() => handleEditMonHoc(item.maKhoi, monHoc.tenMon)}
-                                >
-                                  Lưu
-                                </button>
-                                <button onClick={() => setEditingMonId(null)}>Hủy</button>
-                              </>
-                            ) : (
-                              <>
-                                <button
-                                  className="text-blue-600 mr-2"
-                                  onClick={() => {
-                                    setEditingMonId(monHoc.id);
-                                    setEditedTenMon(monHoc.tenMon);
-                                  }}
-                                >
-                                  Sửa
-                                </button>
-                                <button
-                                  className="text-red-600"
-                                  onClick={() => handleDeleteMonHoc(item.maKhoi, monHoc.tenMon)}
-                                >
-                                  Xóa
-                                </button>
-                              </>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </>
-                  ) : (
-                    <tr>
-                      <td className="border p-1">{item.maKhoi}</td>
-                      <td className="border p-1">
-                        {item.cacMonHoc.map((monHoc) => (
-                          <div key={monHoc.id}>{monHoc.tenMon}</div>
-                        ))}
-                      </td>
-                      <td className="border p-1">
-                        <button
-                          className="text-blue-500 underline"
-                          onClick={() => toggleRow(item.maKhoi)}
-                        >
-                          Xem Chi Tiết
-                        </button>
-                      </td>
-                    </tr>
-                  )}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           <button
             className="mt-6 px-4 py-2 bg-blue-600 text-white rounded"
@@ -325,69 +344,79 @@ const KhoiXetTuyenMonHoc = () => {
               onChange={(e) => setNewMaKhoi(e.target.value)}
               className="p-2 border rounded mr-2"
             />
-            <button className="bg-green-600 text-white px-3 py-1 rounded" onClick={handleAddKhoi}>
+            <button
+              className="bg-green-600 text-white px-3 py-1 rounded"
+              onClick={handleAddKhoi}
+            >
               Thêm Khối
             </button>
           </div>
 
-          <table className="table-auto w-full text-sm text-center border border-gray-300 mb-4">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-2 border">Mã Khối</th>
-                <th className="p-2 border">Hành Động</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((khoi) => (
-                <tr key={khoi.maKhoi}>
-                  <td className="border p-1">
-                    {editingKhoi === khoi.maKhoi ? (
-                      <input
-                        value={editedMaKhoi}
-                        onChange={(e) => setEditedMaKhoi(e.target.value)}
-                        className="p-1 border rounded"
-                      />
-                    ) : (
-                      khoi.maKhoi
-                    )}
-                  </td>
-                  <td className="border p-1">
-                    {editingKhoi === khoi.maKhoi ? (
-                      <>
-                        <button
-                          className="text-green-600 mr-2"
-                          onClick={() => handleEditKhoi(khoi.maKhoi)}
-                        >
-                          Lưu
-                        </button>
-                        <button onClick={() => setEditingKhoi(null)}>Hủy</button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          className="text-blue-600 mr-2"
-                          onClick={() => {
-                            setEditingKhoi(khoi.maKhoi);
-                            setEditedMaKhoi(khoi.maKhoi);
-                          }}
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          className="text-red-600"
-                          onClick={() => handleDeleteKhoi(khoi.maKhoi)}
-                        >
-                          Xóa
-                        </button>
-                      </>
-                    )}
-                  </td>
+          <div className="overflow-auto max-w-full max-h-[62vh]">
+            <table className="w-full">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="p-2 border">Mã Khối</th>
+                  <th className="p-2 border">Hành Động</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {data.map((khoi) => (
+                  <tr key={khoi.maKhoi}>
+                    <td className="border p-1">
+                      {editingKhoi === khoi.maKhoi ? (
+                        <input
+                          value={editedMaKhoi}
+                          onChange={(e) => setEditedMaKhoi(e.target.value)}
+                          className="p-1 border rounded"
+                        />
+                      ) : (
+                        khoi.maKhoi
+                      )}
+                    </td>
+                    <td className="border p-1">
+                      {editingKhoi === khoi.maKhoi ? (
+                        <>
+                          <button
+                            className="text-green-600 mr-2"
+                            onClick={() => handleEditKhoi(khoi.maKhoi)}
+                          >
+                            Lưu
+                          </button>
+                          <button onClick={() => setEditingKhoi(null)}>
+                            Hủy
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            className="text-blue-600 mr-2"
+                            onClick={() => {
+                              setEditingKhoi(khoi.maKhoi);
+                              setEditedMaKhoi(khoi.maKhoi);
+                            }}
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            className="text-red-600"
+                            onClick={() => handleDeleteKhoi(khoi.maKhoi)}
+                          >
+                            Xóa
+                          </button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-          <button className="px-3 py-1 bg-gray-400 text-white rounded" onClick={() => setShowKhoiManagement(false)}>
+          <button
+            className="px-3 py-1 bg-gray-400 text-white rounded mt-4"
+            onClick={() => setShowKhoiManagement(false)}
+          >
             Quay lại Danh Sách Môn Học
           </button>
         </>

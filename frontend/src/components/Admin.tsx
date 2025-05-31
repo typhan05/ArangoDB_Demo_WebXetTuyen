@@ -1,10 +1,10 @@
 import { useState } from "react";
-import NganhHoc from "./adminpage/NganhHoc"; // Import NganhHoc component
 import DanhSachTinh from "./adminpage/DanhSachTinh"; // Import DanhSachTinh component
-import KhoiXetTuyenMonHoc from "./adminpage/KhoiXetTuyenMonHoc"; // Import KhoiXetTuyenMonHoc component
-import KetQuaLop12 from "./adminpage/KetQuaLop12"; // Import KetQuaLop12 component
 import DotXetTuyen from "./adminpage/DotXetTuyen";
-import CapNhatChuyenNganh from "./adminpage/Details/CapNhatChuyenNganh";
+import KetQuaLop12 from "./adminpage/KetQuaLop12"; // Import KetQuaLop12 component
+import KhoiXetTuyenMonHoc from "./adminpage/KhoiXetTuyenMonHoc"; // Import KhoiXetTuyenMonHoc component
+import NganhHoc from "./adminpage/NganhHoc"; // Import NganhHoc component
+
 const AdminPage = () => {
   const [activeMenu, setActiveMenu] = useState("home"); // Mặc định là Trang chủ
   const [isInfoOpen, setIsInfoOpen] = useState(false); // Trạng thái mở Quản lý thông tin
@@ -37,22 +37,44 @@ const AdminPage = () => {
             </li>
             {isInfoOpen && (
               <ul className="submenu">
-                <li onClick={() => setActiveMenu("dotXetTuyen")}>
+                <li
+                  onClick={() => setActiveMenu("dotXetTuyen")}
+                  className={`${
+                    activeMenu === "dotXetTuyen" ? "text-blue-600" : ""
+                  }`}
+                >
                   👁️ Đợt xét tuyển - Hiển thị kết quả
                 </li>
-                <li onClick={() => setActiveMenu("danhSachTinh")}>
+                <li
+                  onClick={() => setActiveMenu("danhSachTinh")}
+                  className={`${
+                    activeMenu === "danhSachTinh" ? "text-blue-600" : ""
+                  }`}
+                >
                   🏫 Danh sách tỉnh - Trường THPT
                 </li>
-                <li onClick={() => setActiveMenu("danhSachMon")}>
+                <li
+                  onClick={() => setActiveMenu("danhSachMon")}
+                  className={`${
+                    activeMenu === "danhSachMon" ? "text-blue-600" : ""
+                  }`}
+                >
                   📘 Danh sách môn học
                 </li>
-                <li onClick={() => setActiveMenu("nganhHoc")}>📚 Ngành học</li>
-                <li onClick={() => setActiveMenu("nhapDuLieu")}>
+                <li
+                  onClick={() => setActiveMenu("nganhHoc")}
+                  className={`${
+                    activeMenu === "nganhHoc" ? "text-blue-600" : ""
+                  }`}
+                >
+                  📚 Ngành học
+                </li>
+                {/* <li onClick={() => setActiveMenu("nhapDuLieu")}>
                   📥 Nhập dữ liệu trúng tuyển
                 </li>
                 <li onClick={() => setActiveMenu("suaDuLieu")}>
                   📊 Sửa bảng dữ liệu trúng tuyển
-                </li>
+                </li> */}
               </ul>
             )}
 
@@ -81,7 +103,7 @@ const AdminPage = () => {
           {activeMenu === "home" && (
             <div>
               <h2 className="font-bold">🏠 Trang chủ</h2>
-              <ul className="grid grid-cols-6 gap-4">
+              <ul className="grid grid-cols-5 gap-4">
                 <li
                   className="rounded-md border border-black p-4 text-center cursor-pointer"
                   onClick={() => {
@@ -176,14 +198,14 @@ const AdminPage = () => {
                   <span className="icon">📚</span>
                   Ngành học
                 </li>
-                <li onClick={() => setActiveMenu("nhapDuLieu")}>
+                {/* <li onClick={() => setActiveMenu("nhapDuLieu")}>
                   <span className="icon">📥</span>
                   Nhập dữ liệu trúng tuyển
                 </li>
                 <li onClick={() => setActiveMenu("suaDuLieu")}>
                   <span className="icon">📊</span>
                   Sửa bảng dữ liệu trúng tuyển
-                </li>
+                </li> */}
               </ul>
             </div>
           )}

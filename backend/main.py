@@ -482,55 +482,55 @@ def create_form(payload: FormXetTuyenRequest):
 
         aql = """
         LET newForm = {
-  MaForm: @MaForm,
-  HoTen: @HoTen,
-  GioiTinh: @GioiTinh,
-  NgaySinh: @NgaySinh,
-  CCCD: @CCCD,
-  Email: @Email,
-  SoDienThoai: @SoDienThoai,
-  DiaChi: @DiaChi,
-  NamTotNghiep: @NamTotNghiep,
-  CoNguyenVongDuHoc: @CoNguyenVongDuHoc,
-  NgayDangKy: @NgayDangKy,
-  MaTruong: @MaTruong,
-  DiemThi: @DiemThi,
-  nganhHocId: @NganhHocId,
-  FileHocBa: @FileHocBa
-}
+        MaForm: @MaForm,
+        HoTen: @HoTen,
+        GioiTinh: @GioiTinh,
+        NgaySinh: @NgaySinh,
+        CCCD: @CCCD,
+        Email: @Email,
+        SoDienThoai: @SoDienThoai,
+        DiaChi: @DiaChi,
+        NamTotNghiep: @NamTotNghiep,
+        CoNguyenVongDuHoc: @CoNguyenVongDuHoc,
+        NgayDangKy: @NgayDangKy,
+        MaTruong: @MaTruong,
+        DiemThi: @DiemThi,
+        nganhHocId: @NganhHocId,
+        FileHocBa: @FileHocBa
+        }
 
-INSERT newForm INTO FormXetTuyen
-LET inserted = NEW
+        INSERT newForm INTO FormXetTuyen
+        LET inserted = NEW
 
-LET truong = FIRST(FOR t IN TruongTHPT FILTER t.MaTruong == @MaTruong RETURN t)
-INSERT { _from: inserted._id, _to: truong._id } INTO FormXetTuyen_TruongTHPT
+        LET truong = FIRST(FOR t IN TruongTHPT FILTER t.MaTruong == @MaTruong RETURN t)
+        INSERT { _from: inserted._id, _to: truong._id } INTO FormXetTuyen_TruongTHPT
 
-LET dot = FIRST(FOR d IN DotXetTuyen FILTER d.MaDotXetTuyen == @MaDotXetTuyen RETURN d)
-INSERT { _from: inserted._id, _to: dot._id } INTO FormXetTuyen_DotXetTuyen
+        LET dot = FIRST(FOR d IN DotXetTuyen FILTER d.MaDotXetTuyen == @MaDotXetTuyen RETURN d)
+        INSERT { _from: inserted._id, _to: dot._id } INTO FormXetTuyen_DotXetTuyen
 
-LET hinhthuc = FIRST(FOR h IN HinhThucXetTuyen FILTER h.MaHinhThucXetTuyen == @MaHinhThucXetTuyen RETURN h)
-INSERT { _from: inserted._id, _to: hinhthuc._id } INTO FormXetTuyen_HinhThucXetTuyen
+        LET hinhthuc = FIRST(FOR h IN HinhThucXetTuyen FILTER h.MaHinhThucXetTuyen == @MaHinhThucXetTuyen RETURN h)
+        INSERT { _from: inserted._id, _to: hinhthuc._id } INTO FormXetTuyen_HinhThucXetTuyen
 
-LET isChuyenNganh = LIKE(@NganhHocId, "ChuyenNganh/%")
-LET isNganhHoc = LIKE(@NganhHocId, "NganhHoc/%")
+        LET isChuyenNganh = LIKE(@NganhHocId, "ChuyenNganh/%")
+        LET isNganhHoc = LIKE(@NganhHocId, "NganhHoc/%")
 
-LET temp1 = (
-    FOR i IN 1..1
-        FILTER isChuyenNganh
-        INSERT { _from: inserted._id, _to: @NganhHocId } INTO FormXetTuyen_ChuyenNganh
-        RETURN 1
-)
+        LET temp1 = (
+            FOR i IN 1..1
+                FILTER isChuyenNganh
+                INSERT { _from: inserted._id, _to: @NganhHocId } INTO FormXetTuyen_ChuyenNganh
+                RETURN 1
+        )
 
-LET temp2 = (
-    FOR i IN 1..1
-        FILTER isNganhHoc
-        INSERT { _from: inserted._id, _to: @NganhHocId } INTO FormXetTuyen_NganhHoc
-        RETURN 1
-)
+        LET temp2 = (
+            FOR i IN 1..1
+                FILTER isNganhHoc
+                INSERT { _from: inserted._id, _to: @NganhHocId } INTO FormXetTuyen_NganhHoc
+                RETURN 1
+        )
 
-INSERT { _from: inserted._id, _to: @KhoiId } INTO FormXetTuyen_KhoiXetTuyen
+        INSERT { _from: inserted._id, _to: @KhoiId } INTO FormXetTuyen_KhoiXetTuyen
 
-RETURN inserted
+        RETURN inserted
         """
 
         bind_vars = {
